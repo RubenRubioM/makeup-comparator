@@ -1,6 +1,8 @@
-use scrapped_webs::sephora;
+use scrapped_webs::scrappable::Scrappable;
+use scrapped_webs::sephora::SephoraSpain;
 
 fn main() {
-    sephora::test();
+    let _s = SephoraSpain::search_product("Willyrex").unwrap();
+
     println!("Makeup comparator!");
 }

@@ -3,8 +3,13 @@ name = "makeup-comparator"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = [
+    "scrapped_webs",
+]
+
 [[bin]]
 name = "makeup-comparator"
 
 [dependencies]
-scrapped-webs = {path = "scrapped-webs"}
+scrapped-webs = {path = "scrapped_webs"}
