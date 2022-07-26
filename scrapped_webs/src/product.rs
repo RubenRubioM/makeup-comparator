@@ -2,6 +2,40 @@
 
 use std::fmt::Display;
 
+/// Defines a tone.
+#[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
+pub struct Tone<'a> {
+    /// Name of the tone.
+    name: &'a str,
+    /// The standard price.
+    price_standard: f32,
+    ///The price in case it is on sale.
+    price_sales: Option<f32>,
+}
+
+impl<'a> Tone<'a> {
+    pub fn new(name: &'a str, price_standard: f32, price_sales: Option<f32>) -> Self {
+        Self {
+            name,
+            price_standard,
+            price_sales,
+        }
+    }
+
+    /// Returns the name of the product.
+    pub fn name(&self) -> &'a str {
+        self.name
+    }
+    /// Returns the standard price.
+    pub fn price_standard(&self) -> f32 {
+        self.price_standard
+    }
+    /// Returns the price if it is on sale.
+    pub fn price_sales(&self) -> Option<f32> {
+        self.price_sales
+    }
+}
+
 /// Defines a product we can obtain web scraping the website
 #[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct Product<'a> {
@@ -14,7 +48,7 @@ pub struct Product<'a> {
     /// The price in case it is on sale.
     price_sales: Option<f32>,
     /// The list of tones for this product.
-    tones: Option<Vec<&'a str>>,
+    tones: Option<Vec<Tone<'a>>>,
     /// The ratings between 0-5.
     rating: Option<f32>,
     /// Similarity between the product name to search and the one found.
@@ -38,7 +72,7 @@ impl<'a> Product<'a> {
         link: &'a str,
         price_standard: f32,
         price_sales: Option<f32>,
-        tones: Option<Vec<&'a str>>,
+        tones: Option<Vec<Tone<'a>>>,
         rating: Option<f32>,
         similarity: f32,
     ) -> Self {
@@ -68,23 +102,8 @@ impl<'a> Product<'a> {
     pub fn price_sales(&self) -> Option<f32> {
         self.price_sales
     }
-    /// Returns (discount_value, percentage_discount) if we have price_sales.
-    ///
-    /// # Example
-    ///
-    /// price_standard = 30;
-    /// price_sales = 15;
-    /// (15.0, 50)
-    pub fn discount(&self) -> Option<(f32, u8)> {
-        if let Some(price_sales) = self.price_sales {
-            let discount: u8 = (price_sales / self.price_standard).round() as u8 * 100;
-            let discount_value: f32 = self.price_standard - price_sales;
-            return Some((discount_value, discount));
-        }
-        None
-    }
     /// Returns the tones of the product.
-    pub fn tones(&self) -> Option<&Vec<&'a str>> {
+    pub fn tones(&self) -> Option<&Vec<Tone>> {
         self.tones.as_ref()
     }
     /// Returns the rating.

@@ -2,5 +2,5 @@ pub mod product;
 pub mod scrappable;
 pub mod sephora;
 
-mod common;
+pub mod configuration;
 mod helper;
