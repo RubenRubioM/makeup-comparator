@@ -35,7 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name : Build
-        run : cargo build --verbose
+        with:
+          command: build
+          args: --verbose
       
   test:
     name: Test Suite
@@ -51,10 +53,11 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Run cargo test
+      - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --workspace
           
   lints:
     name: Lints
