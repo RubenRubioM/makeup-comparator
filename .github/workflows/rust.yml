@@ -5,6 +5,10 @@
 # For multi-OS testing see the `cross.yml` workflow.
 
 on: [push, pull_request]
+  branches:
+    - "*"
+    - "*/*"
+    - "**"
 
 name: Rust
 
