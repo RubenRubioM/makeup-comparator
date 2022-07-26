@@ -4,7 +4,6 @@ pub mod sephora_spain {
 
     use crate::configuration;
     use crate::helper;
-    use crate::product;
     use crate::{
         product::Product,
         scrappable::{Scrappable, SearchError},
