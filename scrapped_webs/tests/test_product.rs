@@ -6,11 +6,11 @@ mod product {
     /// Tests the Tone::new function.
     #[test]
     fn WhenCreatingTones_ThenSuccess() {
-        let name: &str = "Tone1";
+        let name: String = String::from("Tone1");
         let price_standard: f32 = 50.0;
         let price_sales: Option<f32> = Some(25.0);
         let tone: Tone = Tone::new(
-            name,
+            name.clone(),
             price_standard,
             price_sales,
         );
@@ -23,17 +23,17 @@ mod product {
     /// Tests the Product::new function.
     #[test]
     fn WhenCreatingAProduct_ThenSuccess() {
-        let name: &str = "Test";
-        let link: &str = "http://test.es";
-        let tone_name: &str = "Tone 1";
+        let name: String = String::from("Test");
+        let link: String = String::from("http://test.es");
+        let tone_name: String = String::from("Tone 1");
         let price_standard: f32 = 50.0;
         let price_sales: Option<f32> = Some(25.0);
-        let tones: Option<Vec<Tone>> = Some(vec![Tone::new(tone_name, price_standard, price_sales)]);
+        let tones: Option<Vec<Tone>> = Some(vec![Tone::new(tone_name.clone(), price_standard, price_sales)]);
         let rating: Option<f32> = Some(4.5);
         let similarity: f32 = 0.86;
         let product: Product = Product::new(
-            name,
-            link,
+            name.clone(),
+            link.clone(),
             price_standard,
             price_sales,
             tones,

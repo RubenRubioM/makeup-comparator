@@ -1,8 +1,10 @@
 pub mod sephora_spain {
     use std::thread;
+    use std::thread::JoinHandle;
 
     use crate::configuration;
     use crate::helper;
+    use crate::product;
     use crate::{
         product::Product,
         scrappable::{Scrappable, SearchError},
@@ -68,7 +70,6 @@ pub mod sephora_spain {
 
             // Unsafe: using a mutable static variable (common::MIN_SIMILARITY).
             let similarity = helper::compare_similarity(name, &full_name);
-            println!("Min: {}", unsafe {configuration::MIN_SIMILARITY});
             if similarity >= unsafe { configuration::MIN_SIMILARITY } {
                 urls.push(url.to_string());
             } else {
@@ -89,7 +90,7 @@ pub mod sephora_spain {
         }
     }
 
-    fn create_product<'a>(_document: &Html) -> Product<'a> {
+    fn create_product(_document: &Html) -> Product {
 
         Product::default()
     }
@@ -106,18 +107,20 @@ pub mod sephora_spain {
             let response = reqwest::blocking::get(&query).unwrap();
             let response_url = response.url().to_owned();
             let document = scraper::Html::parse_document(&response.text().unwrap());
-            let mut products = vec![];
+            let mut products = Vec::<Product>::new();
             if response_url.as_str() == query {
                 // Get the urls for all the coincidence we found in the search with the given `name`
                 let products_urls: Vec<Url> = search_results_urls(&document, name)?;
     
                 // Use threads to perform concurrency when sending petitions.
-                let mut handles = vec![];
+                let mut handles = Vec::<JoinHandle<Product>>::new();
                 for url in products_urls {
                     handles.push(thread::spawn(move || {
-                        let response = reqwest::blocking::get(url).unwrap().text().unwrap();
+                        let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
                         let document = scraper::Html::parse_document(&response);
-                        create_product(&document)
+                        let mut product: Product = create_product(&document);
+                        product.set_link(url);
+                        product
                     }));
                 }
                 for handle in handles {
@@ -125,7 +128,9 @@ pub mod sephora_spain {
                 }
                 
             } else {
-                products.push(create_product(&document));
+                let mut product = create_product(&document);
+                product.set_link(response_url.to_string());
+                products.push(product);
             }
 
             Ok(products)
