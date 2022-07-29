@@ -99,6 +99,7 @@ pub mod sephora_spain {
         let mut product = Product::default();
 
         // Name of the product
+        // TODO: It is not reporting properly the name of the product in h1>meta
         let name = document
             .select(&scraper::Selector::parse("h1>meta").unwrap())
             .next()

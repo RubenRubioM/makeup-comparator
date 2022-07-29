@@ -6,7 +6,7 @@ use scrapped_webs::sephora::sephora_spain::SephoraSpain;
 
 fn main() {
     let mut products_by_shop = HashMap::<&str, Vec<Product>>::new();
-    match SephoraSpain::look_for_products("FauxFilter Foundation Stick Base De Maquillaje En Stcik")
+    match SephoraSpain::look_for_products("FauxFilter Foundation Stick Base De Maquillaje En Stick")
     {
         Ok(products) => {
             products_by_shop.insert("SephoraSpain", products);
@@ -16,6 +16,6 @@ fn main() {
         }
     };
 
-    println!("{:?}", products_by_shop);
+    println!("{:#?}", products_by_shop);
     println!("Makeup comparator!");
 }

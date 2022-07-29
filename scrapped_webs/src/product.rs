@@ -48,6 +48,21 @@ impl Tone {
     }
 }
 
+impl Display for Tone {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut out: String = String::new();
+        out.push_str(format!("Name: {}", self.name()).as_str());
+        out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
+        match self.price_sales {
+            Some(price_sales) => out.push_str(format!("\nPrice on sale: {}", price_sales).as_str()),
+            None => (),
+        };
+
+        writeln!(f, "{}", out)
+    }
+}
+
+
 /// Defines a product we can obtain web scraping the website
 #[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct Product {
@@ -169,10 +184,27 @@ impl Product {
     }
 }
 
-// TODO
 impl Display for Product {
-    #[allow(unused_variables)] // To prevent the warning
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        let mut out: String = String::new();
+        out.push_str(format!("Name: {}", self.name()).as_str());
+        out.push_str(format!("\nBrand: {}", self.brand()).as_str());
+        out.push_str(format!("\nLink: {}", self.link()).as_str());
+        out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
+        match self.price_sales() {
+            Some(price_sales) => out.push_str(format!("\nPrice on sale: {}", price_sales).as_str()),
+            None => (),
+        }
+        match self.tones() {
+            Some(tones) => out.push_str(format!("\nTones: {:#?}", tones).as_str()),
+            None => (),
+        }
+        match self.rating() {
+            Some(rating) => out.push_str(format!("\nRating: {}", rating).as_str()),
+            None => (),
+        }
+        out.push_str(format!("\nSimilarity: {}", self.similarity()).as_str());
+
+        writeln!(f, "{}", out)
     }
 }
