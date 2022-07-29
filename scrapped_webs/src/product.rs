@@ -2,26 +2,74 @@
 
 use std::fmt::Display;
 
+/// Defines a tone.
+#[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
+pub struct Tone {
+    /// Name of the tone.
+    name: String,
+    /// The standard price.
+    price_standard: f32,
+    ///The price in case it is on sale.
+    price_sales: Option<f32>,
+}
+
+impl Tone {
+    pub fn new(name: String, price_standard: f32, price_sales: Option<f32>) -> Self {
+        Self {
+            name,
+            price_standard,
+            price_sales,
+        }
+    }
+
+    /// Returns the name of the product.
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+    /// Returns the standard price.
+    pub fn price_standard(&self) -> f32 {
+        self.price_standard
+    }
+    /// Returns the price if it is on sale.
+    pub fn price_sales(&self) -> Option<f32> {
+        self.price_sales
+    }
+    /// Sets the name of the product.
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+    /// Sets the standard price.
+    pub fn set_price_standard(&mut self, price_standard: f32) {
+        self.price_standard = price_standard;
+    }
+    /// Sets the price if it is on sale.
+    pub fn set_price_sales(&mut self, price_sales: Option<f32>) {
+        self.price_sales = price_sales;
+    }
+}
+
 /// Defines a product we can obtain web scraping the website
 #[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
-pub struct Product<'a> {
+pub struct Product {
     /// The product name.
-    name: &'a str,
+    name: String,
+    /// The brand name.
+    brand: String,
     /// The link to the product.
-    link: &'a str,
+    link: String,
     /// The standard price.
     price_standard: f32,
     /// The price in case it is on sale.
     price_sales: Option<f32>,
     /// The list of tones for this product.
-    tones: Option<Vec<&'a str>>,
+    tones: Option<Vec<Tone>>,
     /// The ratings between 0-5.
     rating: Option<f32>,
     /// Similarity between the product name to search and the one found.
     similarity: f32,
 }
 
-impl<'a> Product<'a> {
+impl Product {
     /// Creates a new Product.
     /// # Arguments
     /// name: The name of the product.
@@ -33,17 +81,20 @@ impl<'a> Product<'a> {
     /// similarity: Similarity with the product tried to find.
     /// # Returns
     /// Self: A Product.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
-        name: &'a str,
-        link: &'a str,
+        name: String,
+        brand: String,
+        link: String,
         price_standard: f32,
         price_sales: Option<f32>,
-        tones: Option<Vec<&'a str>>,
+        tones: Option<Vec<Tone>>,
         rating: Option<f32>,
         similarity: f32,
     ) -> Self {
         Self {
             name,
+            brand,
             link,
             price_standard,
             price_sales,
@@ -53,12 +104,16 @@ impl<'a> Product<'a> {
         }
     }
     /// Returns the name of the product.
-    pub fn name(&self) -> &'a str {
-        self.name
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+    /// Returns the brand of the product.
+    pub fn brand(&self) -> &String {
+        &self.brand
     }
     /// Returns the link to the product.
-    pub fn link(&self) -> &'a str {
-        self.link
+    pub fn link(&self) -> &String {
+        &self.link
     }
     /// Returns the standard price.
     pub fn price_standard(&self) -> f32 {
@@ -68,23 +123,8 @@ impl<'a> Product<'a> {
     pub fn price_sales(&self) -> Option<f32> {
         self.price_sales
     }
-    /// Returns (discount_value, percentage_discount) if we have price_sales.
-    ///
-    /// # Example
-    ///
-    /// price_standard = 30;
-    /// price_sales = 15;
-    /// (15.0, 50)
-    pub fn discount(&self) -> Option<(f32, u8)> {
-        if let Some(price_sales) = self.price_sales {
-            let discount: u8 = (price_sales / self.price_standard).round() as u8 * 100;
-            let discount_value: f32 = self.price_standard - price_sales;
-            return Some((discount_value, discount));
-        }
-        None
-    }
     /// Returns the tones of the product.
-    pub fn tones(&self) -> Option<&Vec<&'a str>> {
+    pub fn tones(&self) -> Option<&Vec<Tone>> {
         self.tones.as_ref()
     }
     /// Returns the rating.
@@ -95,10 +135,42 @@ impl<'a> Product<'a> {
     pub fn similarity(&self) -> f32 {
         self.similarity
     }
+    /// Sets the name of the product.
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+    /// Sets the brand of the product.
+    pub fn set_brand(&mut self, brand: String) {
+        self.brand = brand;
+    }
+    /// Sets the link to the product.
+    pub fn set_link(&mut self, link: String) {
+        self.link = link;
+    }
+    /// Sets the standard price.
+    pub fn set_price_standard(&mut self, price_standard: f32) {
+        self.price_standard = price_standard;
+    }
+    /// Sets the price if it is on sale.
+    pub fn set_price_sales(&mut self, price_sales: Option<f32>) {
+        self.price_sales = price_sales
+    }
+    /// Sets the tones of the product.
+    pub fn set_tones(&mut self, tones: Option<Vec<Tone>>) {
+        self.tones = tones;
+    }
+    /// Sets the rating.
+    pub fn set_rating(&mut self, rating: Option<f32>) {
+        self.rating = rating;
+    }
+    /// Sets the similarity.
+    pub fn set_similarity(&mut self, similarity: f32) {
+        self.similarity = similarity;
+    }
 }
 
 // TODO
-impl<'a> Display for Product<'a> {
+impl Display for Product {
     #[allow(unused_variables)] // To prevent the warning
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
