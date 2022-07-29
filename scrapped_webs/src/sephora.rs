@@ -99,7 +99,6 @@ pub mod sephora_spain {
         let mut product = Product::default();
 
         // Name of the product
-        // TODO: It is not reporting properly the name of the product in h1>meta
         let name = document
             .select(&scraper::Selector::parse("h1>meta").unwrap())
             .next()
@@ -141,7 +140,9 @@ pub mod sephora_spain {
                         .select(&scraper::Selector::parse("span.variation-title").unwrap())
                         .next()
                         .expect("not found any ElementRef with span.variation-title")
-                        .inner_html();
+                        .inner_html()
+                        .trim()
+                        .to_string();
 
                     // Tone price standard and price sale
                     // NOTE: It has different layout if the product its on sale or not
