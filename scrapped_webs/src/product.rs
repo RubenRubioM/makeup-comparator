@@ -23,8 +23,8 @@ impl Tone {
     }
 
     /// Returns the name of the product.
-    pub fn name(&self) -> String {
-        self.name.clone()
+    pub fn name(&self) -> &String {
+        &self.name
     }
     /// Returns the standard price.
     pub fn price_standard(&self) -> f32 {
@@ -53,6 +53,8 @@ impl Tone {
 pub struct Product {
     /// The product name.
     name: String,
+    /// The brand name.
+    brand: String,
     /// The link to the product.
     link: String,
     /// The standard price.
@@ -79,8 +81,10 @@ impl Product {
     /// similarity: Similarity with the product tried to find.
     /// # Returns
     /// Self: A Product.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: String,
+        brand: String,
         link: String,
         price_standard: f32,
         price_sales: Option<f32>,
@@ -90,6 +94,7 @@ impl Product {
     ) -> Self {
         Self {
             name,
+            brand,
             link,
             price_standard,
             price_sales,
@@ -99,12 +104,16 @@ impl Product {
         }
     }
     /// Returns the name of the product.
-    pub fn name(&self) -> String {
-        self.name.clone()
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+    /// Returns the brand of the product.
+    pub fn brand(&self) -> &String {
+        &self.brand
     }
     /// Returns the link to the product.
-    pub fn link(&self) -> String {
-        self.link.clone()
+    pub fn link(&self) -> &String {
+        &self.link
     }
     /// Returns the standard price.
     pub fn price_standard(&self) -> f32 {
@@ -129,6 +138,10 @@ impl Product {
     /// Sets the name of the product.
     pub fn set_name(&mut self, name: String) {
         self.name = name;
+    }
+    /// Sets the brand of the product.
+    pub fn set_brand(&mut self, brand: String) {
+        self.brand = brand;
     }
     /// Sets the link to the product.
     pub fn set_link(&mut self, link: String) {

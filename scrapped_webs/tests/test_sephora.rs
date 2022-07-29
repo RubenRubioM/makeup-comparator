@@ -1,12 +1,13 @@
 #[allow(non_snake_case)]
 #[cfg(test)]
 mod sephora_spain {
-    use scrapped_webs::{scrappable::*};
+    use scrapped_webs::scrappable::*;
     use scrapped_webs::sephora::sephora_spain::*;
 
     /// Tests if the SephoraSpain::look_for_prducts(name) works when we search for a product and get redirected.
     /// If at some point fails, might be because the webpage changed or the product for search is not avaliable anymore.
     #[test]
+    #[ignore]
     fn WhenCallingLookForProductsWithUrlRedirection_ThenSuccess() {
         let products = SephoraSpain::look_for_products("Sephora Collection Cream lip stain - Barra de labios aterciopelada de fijación extrema").unwrap();
         assert_eq!(products.len(), 1);
@@ -17,6 +18,7 @@ mod sephora_spain {
     /// Tests if the SephoraSpain::look_for_prducts(name) works.
     /// If at some point fails, might be because the webpage changed, the product for search is not avaliable anymore or there are new entries for this search.
     #[test]
+    #[ignore]
     fn WhenCallingLookForProductsWithSearchResults_ThenSuccess() {
         let products = SephoraSpain::look_for_products("RARE BEAUTY Kind Words").unwrap();
         assert_eq!(products.len(), 2);
@@ -26,6 +28,7 @@ mod sephora_spain {
 
     /// Tests if the SephoraSpain::look_for_prducts(name) return errors properly.
     #[test]
+    #[ignore]
     fn WhenCallingLookForProductsWithoutResults_ThenReturnErrors() {
         match SephoraSpain::look_for_products("Taemin") {
             Ok(_) => panic!("We should not find any results"),
@@ -44,6 +47,5 @@ mod sephora_spain {
                 SearchError::NotFound => panic!("{}", search_error),
             },
         }
-
     }
 }
