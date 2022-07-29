@@ -13,3 +13,6 @@ name = "makeup-comparator"
 
 [dependencies]
 scrapped-webs = {path = "scrapped_webs"}
+
+[dev-dependencies]
+rusty-hook = "^0.11.2"
