@@ -62,7 +62,6 @@ impl Display for Tone {
     }
 }
 
-
 /// Defines a product we can obtain web scraping the website
 #[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct Product {
