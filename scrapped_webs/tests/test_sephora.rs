@@ -9,7 +9,7 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithUrlRedirection_ThenSuccess() {
-        let products = SephoraSpain::look_for_products("Sephora Collection Cream lip stain - Barra de labios aterciopelada de fijación extrema").unwrap();
+        let products = SephoraSpain::look_for_products(String::from("Sephora Collection Cream lip stain - Barra de labios aterciopelada de fijación extrema")).unwrap();
         assert_eq!(products.len(), 1);
 
         // TODO: Assert if the values are returned properly.
@@ -20,7 +20,8 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithSearchResults_ThenSuccess() {
-        let products = SephoraSpain::look_for_products("RARE BEAUTY Kind Words").unwrap();
+        let products =
+            SephoraSpain::look_for_products(String::from("RARE BEAUTY Kind Words")).unwrap();
         assert_eq!(products.len(), 2);
 
         // TODO: Assert if the values are returned properly.
@@ -30,7 +31,7 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithoutResults_ThenReturnErrors() {
-        match SephoraSpain::look_for_products("Taemin") {
+        match SephoraSpain::look_for_products(String::from("Taemin")) {
             Ok(_) => panic!("We should not find any results"),
             Err(search_error) => match search_error {
                 SearchError::Timeout => panic!("{}", search_error),
@@ -39,7 +40,7 @@ mod sephora_spain {
             },
         }
 
-        match SephoraSpain::look_for_products("Kind") {
+        match SephoraSpain::look_for_products(String::from("Kind")) {
             Ok(_) => panic!("We should not find any results"),
             Err(search_error) => match search_error {
                 SearchError::Timeout => panic!("{}", search_error),

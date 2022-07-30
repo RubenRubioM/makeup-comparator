@@ -189,7 +189,7 @@ pub mod sephora_spain {
 
     /// Scrappable trait implementation for SephoraSpain
     impl Scrappable for SephoraSpain {
-        fn look_for_products(name: &'static str) -> Result<Vec<Product>, SearchError> {
+        fn look_for_products(name: String) -> Result<Vec<Product>, SearchError> {
             // We recieve a word like "This word" and we should search in format of "This+word".
             let formatted_name = name.replace(' ', "+");
             let query: Url = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
@@ -202,12 +202,14 @@ pub mod sephora_spain {
             let mut products = Vec::<Product>::new();
             if response_url.as_str() == query {
                 // Get the urls for all the coincidence we found in the search with the given `name`
-                let products_urls: Vec<Url> = search_results_urls(&document, name)?;
+                let products_urls: Vec<Url> = search_results_urls(&document, name.as_str())?;
                 println!("Found {} results", products_urls.len());
 
                 // Use threads to perform concurrency when sending petitions.
                 let mut handles = Vec::<JoinHandle<Product>>::new();
                 for url in products_urls {
+                    // Make a copy to be able to send via threads.
+                    let name_copy = name.clone();
                     handles.push(thread::spawn(move || {
                         println!("GET: {url}");
                         let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
@@ -215,8 +217,10 @@ pub mod sephora_spain {
                         let mut product: Product = create_product(&document);
                         product.set_link(url);
                         let full_name = format!("{} {}", product.brand(), product.name());
-                        product
-                            .set_similarity(helper::compare_similarity(full_name.as_str(), name));
+                        product.set_similarity(helper::compare_similarity(
+                            full_name.as_str(),
+                            name_copy.as_str(),
+                        ));
                         product
                     }));
                 }
@@ -227,7 +231,10 @@ pub mod sephora_spain {
                 let mut product = create_product(&document);
                 product.set_link(response_url.to_string());
                 let full_name = format!("{} {}", product.brand(), product.name());
-                product.set_similarity(helper::compare_similarity(full_name.as_str(), name));
+                product.set_similarity(helper::compare_similarity(
+                    full_name.as_str(),
+                    name.as_str(),
+                ));
                 products.push(product);
             }
 
