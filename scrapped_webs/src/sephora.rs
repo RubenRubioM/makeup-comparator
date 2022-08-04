@@ -107,13 +107,14 @@ pub mod sephora_spain {
             .attr("content")
             .unwrap()
             .to_string();
+        println!("{name}");
         product.set_name(name);
 
         // Brand name
         let brand = document
-            .select(&scraper::Selector::parse("h1>div>span.brand-name>a").unwrap())
+            .select(&scraper::Selector::parse("span.brand-name>a").unwrap())
             .next()
-            .expect("not found any ElementRef with h1>div>span.brand-name>a")
+            .expect("not found any ElementRef with span.brand-name>a")
             .inner_html();
         product.set_brand(brand);
 
@@ -205,7 +206,19 @@ pub mod sephora_spain {
             let response_url = response.url().to_owned();
             let document = scraper::Html::parse_document(&response.text().unwrap());
             let mut products = Vec::<Product>::new();
-            if response_url.as_str() == query {
+
+            // If it only find 1 result it redirects to a product page directly with /p/product_link.html
+            if response_url.as_str().contains("/p/") {
+                println!("GET: {}", response_url);
+                let mut product = create_product(&document);
+                product.set_link(response_url.to_string());
+                let full_name = format!("{} {}", product.brand(), product.name());
+                product.set_similarity(helper::compare_similarity(
+                    full_name.as_str(),
+                    name.as_str(),
+                ));
+                products.push(product);
+            } else {
                 // Get the urls for all the coincidence we found in the search with the given `name`
                 let products_urls: Vec<Url> = search_results_urls(&document, name.as_str())?;
                 println!("Found {} results", products_urls.len());
@@ -232,16 +245,6 @@ pub mod sephora_spain {
                 for handle in handles {
                     products.push(handle.join().unwrap());
                 }
-            } else {
-                println!("GET: {}", response_url);
-                let mut product = create_product(&document);
-                product.set_link(response_url.to_string());
-                let full_name = format!("{} {}", product.brand(), product.name());
-                product.set_similarity(helper::compare_similarity(
-                    full_name.as_str(),
-                    name.as_str(),
-                ));
-                products.push(product);
             }
 
             Ok(products)

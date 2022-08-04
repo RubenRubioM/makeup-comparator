@@ -40,7 +40,7 @@ mod sephora_spain {
         );
     }
 
-    /// Tests if the SephoraSpain::look_for_prducts(name) works.
+    /// Tests if the SephoraSpain::look_for_prducts(name) works when the /search? path.
     /// If at some point fails, might be because the webpage changed, the product for search is not avaliable anymore or there are new entries for this search.
     #[test]
     #[ignore]
@@ -48,6 +48,21 @@ mod sephora_spain {
         let products =
             SephoraSpain::look_for_products(String::from("RARE BEAUTY Kind Words")).unwrap();
         assert_eq!(products.len(), 2);
+    }
+
+    /// Tests if the SephoraSpain::look_for_prducts(name) works when the /todos-los-productos/ path.
+    /// If at some point fails, might be because the webpage changed, the product for search is not avaliable anymore or there are new entries for this search.
+    #[test]
+    #[ignore]
+    fn WhenCallingLookForProductsWithRedirectionToAllProducts_ThenSuccess() {
+        SephoraSpain::look_for_products(String::from("Lapiz labial")).unwrap();
+        assert!(
+            true
+);
+
+
+
+
     }
 
     /// Tests if the SephoraSpain::look_for_prducts(name) return errors properly.
