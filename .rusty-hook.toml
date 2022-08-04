@@ -1,5 +1,5 @@
 [hooks]
-pre-commit = "cargo check && cargo test --workspace -- --ignored --show-output && cargo clippy"
+pre-commit = "cargo fmt && git add . && cargo check && cargo test --workspace -- --ignored --show-output && cargo clippy"
 pre-push = "cargo fmt -- --check || cargo fmt && cargo fmt -- --check"
 
 [logging]
