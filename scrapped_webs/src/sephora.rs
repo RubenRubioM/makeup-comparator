@@ -191,11 +191,6 @@ pub mod sephora_spain {
     /// Scrappable trait implementation for SephoraSpain
     impl Scrappable for SephoraSpain {
         fn look_for_products(name: String) -> Result<Vec<Product>, SearchError> {
-            // NOTE: If search "Sephora" in sephora.es the result is a specific url: https://www.sephora.es/categoria-ver-todo-sephora-collection/
-            if name == "Sephora" {
-                return Err(SearchError::ForbiddenWord(name));
-            }
-
             // We recieve a word like "This word" and we should search in format of "This+word".
             let formatted_name = name.replace(' ', "+");
             let query: Url = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");

@@ -68,18 +68,7 @@ mod sephora_spain {
             Err(search_error) => match search_error {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughtSimilarity => panic!("{}", search_error),
-                SearchError::ForbiddenWord(_) => panic!("{}", search_error),
                 SearchError::NotFound => assert!(true),
-            },
-        }
-
-        match SephoraSpain::look_for_products(String::from("Sephora")) {
-            Ok(_) => panic!("We should not find any results"),
-            Err(search_error) => match search_error {
-                SearchError::Timeout => panic!("{}", search_error),
-                SearchError::NotEnoughtSimilarity => panic!("{}", search_error),
-                SearchError::ForbiddenWord(_) => assert!(true),
-                SearchError::NotFound => panic!("{}", search_error),
             },
         }
     }

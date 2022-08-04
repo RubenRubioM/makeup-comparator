@@ -8,8 +8,6 @@ pub enum SearchError {
     Timeout,
     /// Found products but without enought similarity with the one provided.
     NotEnoughtSimilarity,
-    /// Word that are not permitted or it is useless in this website.
-    ForbiddenWord(String),
     /// Not found any result.
     NotFound,
 }
@@ -20,12 +18,6 @@ impl std::fmt::Display for SearchError {
             SearchError::Timeout => write!(f, "timeout when doing the petition"),
             SearchError::NotEnoughtSimilarity => {
                 write!(f, "not found any result above the minimum similarity rate")
-            }
-            SearchError::ForbiddenWord(word) => {
-                write!(
-                    f,
-                    "the word \"{word}\" is not allowed or it useless in this webpage"
-                )
             }
             SearchError::NotFound => write!(f, "not found any result"),
         }
