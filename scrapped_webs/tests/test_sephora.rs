@@ -9,10 +9,28 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithUrlRedirection_ThenSuccess() {
-        let products = SephoraSpain::look_for_products(String::from("Sephora Collection Cream lip stain - Barra de labios aterciopelada de fijación extrema")).unwrap();
+        let products = SephoraSpain::look_for_products(String::from("ISDIN protector labial")).unwrap();
         assert_eq!(products.len(), 1);
 
         // TODO: Assert if the values are returned properly.
+        let product = products.get(0).unwrap();
+        assert_eq!(*product.name(), "Protector labial spf50+ - Protector labial");
+        assert_eq!(*product.brand(), "ISDIN");
+        assert_eq!(*product.link(), "https://www.sephora.es/p/protector-labial-spf50---protector-labial-469417.html");
+        assert_eq!(product.price_standard(), 0.0);
+        assert_eq!(product.price_sales(), None);
+        assert_eq!(product.rating(), None);
+        assert_eq!(product.similarity(), 1.0);
+        assert_eq!(product.tones().unwrap().len(), 1);
+        assert_eq!(*product.tones().unwrap().first().unwrap().name(), "4 g");
+        assert_eq!(
+            product.tones().unwrap().first().unwrap().price_standard(),
+            7.99
+        );
+        assert_eq!(
+            product.tones().unwrap().first().unwrap().price_sales(),
+            None
+        );
     }
 
     /// Tests if the SephoraSpain::look_for_prducts(name) works.
@@ -24,7 +42,6 @@ mod sephora_spain {
             SephoraSpain::look_for_products(String::from("RARE BEAUTY Kind Words")).unwrap();
         assert_eq!(products.len(), 2);
 
-        // TODO: Assert if the values are returned properly.
     }
 
     /// Tests if the SephoraSpain::look_for_prducts(name) return errors properly.
