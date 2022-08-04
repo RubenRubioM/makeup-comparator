@@ -9,14 +9,21 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithUrlRedirection_ThenSuccess() {
-        let products = SephoraSpain::look_for_products(String::from("ISDIN protector labial")).unwrap();
+        let products =
+            SephoraSpain::look_for_products(String::from("ISDIN protector labial")).unwrap();
         assert_eq!(products.len(), 1);
 
         // TODO: Assert if the values are returned properly.
         let product = products.get(0).unwrap();
-        assert_eq!(*product.name(), "Protector labial spf50+ - Protector labial");
+        assert_eq!(
+            *product.name(),
+            "Protector labial spf50+ - Protector labial"
+        );
         assert_eq!(*product.brand(), "ISDIN");
-        assert_eq!(*product.link(), "https://www.sephora.es/p/protector-labial-spf50---protector-labial-469417.html");
+        assert_eq!(
+            *product.link(),
+            "https://www.sephora.es/p/protector-labial-spf50---protector-labial-469417.html"
+        );
         assert_eq!(product.price_standard(), 0.0);
         assert_eq!(product.price_sales(), None);
         assert_eq!(product.rating(), None);
@@ -41,7 +48,6 @@ mod sephora_spain {
         let products =
             SephoraSpain::look_for_products(String::from("RARE BEAUTY Kind Words")).unwrap();
         assert_eq!(products.len(), 2);
-
     }
 
     /// Tests if the SephoraSpain::look_for_prducts(name) return errors properly.
