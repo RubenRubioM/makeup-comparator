@@ -56,13 +56,7 @@ mod sephora_spain {
     #[ignore]
     fn WhenCallingLookForProductsWithRedirectionToAllProducts_ThenSuccess() {
         SephoraSpain::look_for_products(String::from("Lapiz labial")).unwrap();
-        assert!(
-            true
-);
-
-
-
-
+        assert!(true);
     }
 
     /// Tests if the SephoraSpain::look_for_prducts(name) return errors properly.
