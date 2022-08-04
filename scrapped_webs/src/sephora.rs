@@ -190,6 +190,11 @@ pub mod sephora_spain {
     /// Scrappable trait implementation for SephoraSpain
     impl Scrappable for SephoraSpain {
         fn look_for_products(name: String) -> Result<Vec<Product>, SearchError> {
+            // NOTE: If search "Sephora" in sephora.es the result is a specific url: https://www.sephora.es/categoria-ver-todo-sephora-collection/
+            if name == "Sephora" {
+                return Err(SearchError::ForbiddenWord(name));
+            }
+
             // We recieve a word like "This word" and we should search in format of "This+word".
             let formatted_name = name.replace(' ', "+");
             let query: Url = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
@@ -228,6 +233,7 @@ pub mod sephora_spain {
                     products.push(handle.join().unwrap());
                 }
             } else {
+                println!("GET: {}", response_url);
                 let mut product = create_product(&document);
                 product.set_link(response_url.to_string());
                 let full_name = format!("{} {}", product.brand(), product.name());
