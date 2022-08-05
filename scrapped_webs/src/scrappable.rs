@@ -32,5 +32,5 @@ pub trait Scrappable {
     /// # Returns
     /// Product - A vector with the similar products that matches the name.
     /// Box<dyn Error> - If couldn't find the product.
-    fn look_for_products(name: String) -> Result<Vec<Product>, SearchError>;
+    fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError>;
 }

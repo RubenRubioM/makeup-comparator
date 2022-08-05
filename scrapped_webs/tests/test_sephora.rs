@@ -1,6 +1,7 @@
 #[allow(non_snake_case)]
 #[cfg(test)]
 mod sephora_spain {
+    use scrapped_webs::configuration::Configuration;
     use scrapped_webs::scrappable::*;
     use scrapped_webs::sephora::sephora_spain::*;
 
@@ -9,8 +10,11 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithUrlRedirection_ThenSuccess() {
-        let products =
-            SephoraSpain::look_for_products(String::from("ISDIN protector labial")).unwrap();
+        let conf: Configuration = Configuration::new(0.0, usize::MAX);
+        let sephora_spain = SephoraSpain::new(&conf);
+        let products = sephora_spain
+            .look_for_products(String::from("ISDIN protector labial"))
+            .unwrap();
         assert_eq!(products.len(), 1);
 
         // TODO: Assert if the values are returned properly.
@@ -45,8 +49,11 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithSearchResults_ThenSuccess() {
-        let products =
-            SephoraSpain::look_for_products(String::from("RARE BEAUTY Kind Words")).unwrap();
+        let conf: Configuration = Configuration::new(0.0, usize::MAX);
+        let sephora_spain = SephoraSpain::new(&conf);
+        let products = sephora_spain
+            .look_for_products(String::from("RARE BEAUTY Kind Words"))
+            .unwrap();
         assert_eq!(products.len(), 2);
     }
 
@@ -55,7 +62,11 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithRedirectionToAllProducts_ThenSuccess() {
-        SephoraSpain::look_for_products(String::from("Lapiz labial")).unwrap();
+        let conf: Configuration = Configuration::new(0.0, usize::MAX);
+        let sephora_spain = SephoraSpain::new(&conf);
+        sephora_spain
+            .look_for_products(String::from("Lapiz labial"))
+            .unwrap();
         assert!(true);
     }
 
@@ -63,7 +74,10 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithoutResults_ThenReturnErrors() {
-        match SephoraSpain::look_for_products(String::from("Taemin")) {
+        let conf: Configuration = Configuration::new(0.0, usize::MAX);
+        let sephora_spain = SephoraSpain::new(&conf);
+
+        match sephora_spain.look_for_products(String::from("Taemin")) {
             Ok(_) => panic!("We should not find any results"),
             Err(search_error) => match search_error {
                 SearchError::Timeout => panic!("{}", search_error),
