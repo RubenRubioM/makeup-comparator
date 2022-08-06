@@ -91,14 +91,14 @@ pub struct Product {
     price_standard: f32,
     /// The price in case it is on sale.
     price_sales: Option<f32>,
-    /// The list of tones for this product.
-    tones: Option<Vec<Tone>>,
     /// The ratings between 0-5.
     rating: Option<f32>,
     /// Similarity between the product name to search and the one found.
     similarity: f32,
     /// Available of the product.
     available: bool,
+    /// The list of tones for this product.
+    tones: Option<Vec<Tone>>,
 }
 
 impl Product {
@@ -222,16 +222,16 @@ impl Display for Product {
             Some(price_sales) => out.push_str(format!("\nPrice on sale: {}", price_sales).as_str()),
             None => (),
         }
-        match self.tones() {
-            Some(tones) => out.push_str(format!("\nTones: {:#?}", tones).as_str()),
-            None => (),
-        }
         match self.rating() {
             Some(rating) => out.push_str(format!("\nRating: {}", rating).as_str()),
             None => (),
         }
         out.push_str(format!("\nSimilarity: {}", self.similarity()).as_str());
         out.push_str(format!("\nAvailable: {}", self.available()).as_str());
+        match self.tones() {
+            Some(tones) => out.push_str(format!("\nTones: {:#?}", tones).as_str()),
+            None => (),
+        }
 
         writeln!(f, "{}", out)
     }

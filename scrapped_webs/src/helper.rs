@@ -63,22 +63,24 @@ where
 /// max_rating - The maximum rating available
 ///
 /// # Returns
-/// The normalized value between 0-5
+/// The normalized value between 0-10
 ///
 /// # Example
-/// let rating = normalized_rating(20.0, 100.0);
-/// assert_eq!(rating, 1.0);
+/// let rating = normalized_rating(25.0, 50.0);
+/// assert_eq!(rating, 5.0);
 #[allow(dead_code)]
 pub fn normalized_rating(rating: f32, max_rating: f32) -> f32 {
-    rating * 5.0 / max_rating
+    rating * 10.0 / max_rating
 }
 
+/// Enumeration of possible errors when using the scraper crate.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum HtmlSearchError {
     ElementNotFound(String),
     AttributeNotFound(String),
 }
 
+/// Debug implementation for HtmlSearchError to print when unwrapping.
 impl std::fmt::Debug for HtmlSearchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -92,6 +94,14 @@ impl std::fmt::Debug for HtmlSearchError {
     }
 }
 
+/// Returns the inner html for the selector provided in the element
+/// # Arguments
+/// element - The HTML element
+/// selector - The css selector
+///
+/// # Returns
+/// String - if found
+/// HtmlSearchError::ElementNotFound - if not found the selector
 pub fn inner_html_value(element: &ElementRef, selector: &str) -> Result<String, HtmlSearchError> {
     match element
         .select(&scraper::Selector::parse(selector).unwrap())
@@ -102,6 +112,16 @@ pub fn inner_html_value(element: &ElementRef, selector: &str) -> Result<String, 
     }
 }
 
+/// Returns the value for an attribute inside the selector provided in the element
+/// # Arguments
+/// element - The HTML element
+/// selector - The css selector
+/// attribute - The html attribute
+///
+/// # Returns
+/// String - if found
+/// HtmlSearchError::ElementNotFound - if not found the selector
+/// HtmlSearchError::AttributeNotFound - if not found the attribute
 pub fn attribute_html_value(
     element: &ElementRef,
     selector: &str,
@@ -151,8 +171,8 @@ mod tests {
     #[test]
     /// Tests if the rating is properly normalized between 0-5.
     fn test_normalized_rating() {
-        assert_eq!(1.0, normalized_rating(20.0, 100.0));
-        assert_eq!(5.0, normalized_rating(5.0, 5.0));
-        assert_eq!(1.0, normalized_rating(1.0, 5.0));
+        assert_eq!(2.0, normalized_rating(20.0, 100.0));
+        assert_eq!(10.0, normalized_rating(5.0, 5.0));
+        assert_eq!(1.0, normalized_rating(1.0, 10.0));
     }
 }

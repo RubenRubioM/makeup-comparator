@@ -21,7 +21,7 @@ pub mod spain {
     // Suffix for searching in the website.
     const SEARCH_SUFFIX: &str = "buscar?q=";
     // Maximum rating for SephoraSpain.
-    // const MAX_RATING: f32 = 5.0;
+    const MAX_RATING: f32 = 5.0;
 
     /// Structure that define functionality for SephoraSpain.
     pub struct SephoraSpain<'a> {
@@ -181,9 +181,18 @@ pub mod spain {
             }
             product.set_tones(if tones.is_empty() { None } else { Some(tones) });
 
-            // TODO: Rating of the product.
+            let mut rating =
+                helper::inner_html_value(&html, "div.bv_numReviews_text>span").unwrap();
+            rating = if rating == "" {
+                "0.0".to_string()
+            } else {
+                rating
+            };
+            product.set_rating(Some(helper::normalized_rating(
+                rating.parse::<f32>().unwrap(),
+                MAX_RATING,
+            )));
 
-            // product.set_rating(Some(helper::normalized_rating(rating.parse::<f32>().unwrap(), MAX_RATING)));
             product
         }
     }
