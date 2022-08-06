@@ -6,8 +6,8 @@ use crate::product::Product;
 pub enum SearchError {
     /// Timeout in the request.
     Timeout,
-    /// Found products but without enought similarity with the one provided.
-    NotEnoughtSimilarity,
+    /// Found products but without enough similarity with the one provided.
+    NotEnoughSimilarity,
     /// Not found any result.
     NotFound,
 }
@@ -16,7 +16,7 @@ impl std::fmt::Display for SearchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SearchError::Timeout => write!(f, "timeout when doing the petition"),
-            SearchError::NotEnoughtSimilarity => {
+            SearchError::NotEnoughSimilarity => {
                 write!(f, "not found any result above the minimum similarity rate")
             }
             SearchError::NotFound => write!(f, "not found any result"),

@@ -4,7 +4,7 @@ use std::env;
 use scrapped_webs::configuration::Configuration;
 use scrapped_webs::product::Product;
 use scrapped_webs::scrappable::Scrappable;
-use scrapped_webs::sephora::sephora_spain::SephoraSpain;
+use scrapped_webs::sephora::spain::SephoraSpain;
 
 fn main() {
     let conf: Configuration = Configuration::new(0.0, usize::MAX);

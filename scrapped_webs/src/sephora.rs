@@ -14,14 +14,14 @@ use scraper::ElementRef;
 use scraper::Html;
 
 /// Module for sephora.es
-pub mod sephora_spain {
+pub mod spain {
     use super::*;
     // Webpage url.
     const URL: &str = "https://www.sephora.es/";
     // Suffix for searching in the website.
     const SEARCH_SUFFIX: &str = "buscar?q=";
     // Maximum rating for SephoraSpain.
-    // const MAX_RATING: f32 = 5.0;
+    const MAX_RATING: f32 = 5.0;
 
     /// Structure that define functionality for SephoraSpain.
     pub struct SephoraSpain<'a> {
@@ -53,6 +53,7 @@ pub mod sephora_spain {
         ) -> Result<Vec<String>, SearchError> {
             let mut urls: Vec<String> = Vec::new();
             let mut any_results = false;
+
             // Select the div that wraps the information for every result found.
             let selector = scraper::Selector::parse(
                 "#search-result-items>li>div>.product-info-wrapper>.product-info",
@@ -70,33 +71,13 @@ pub mod sephora_spain {
                     break;
                 }
 
-                // Find the brand inside the HTML.
-                let brand = result
-                    .select(&scraper::Selector::parse("span.product-brand").unwrap())
-                    .next()
-                    .expect("not found any ElementRef with .product-info>span.product-brand")
-                    .inner_html();
-                // Find the product title.
-                let title = result
-                    .select(&scraper::Selector::parse("h3").unwrap())
-                    .next()
-                    .expect("not found any ElementRef with .product-info>h3")
-                    .value()
-                    .attr("title")
-                    .expect("attribute (title) inside .product-info>h3 not found");
-                // Find the url.
-                let url = result
-                    .select(&scraper::Selector::parse("a").unwrap())
-                    .next()
-                    .expect("not found any ElementRef with .product-info>a")
-                    .value()
-                    .attr("href")
-                    .expect("attribute (href) inside .product-info>a not found");
+                let brand = helper::inner_html_value(&result, "span.product-brand").unwrap();
+                let title = helper::attribute_html_value(&result, "h3", "title").unwrap();
+                let url = helper::attribute_html_value(&result, "a", "href").unwrap();
 
                 // full_name format = {Brand} {Title} = {Rare Beauty} {Kind Words - Barra de labios mate}
-                let full_name = brand + " " + title;
+                let full_name = brand + " " + title.as_str();
 
-                // Unsafe: using a mutable static variable (common::MIN_SIMILARITY).
                 let similarity = helper::compare_similarity(name, &full_name);
                 if similarity >= self.config.min_similarity() {
                     urls.push(url.to_string());
@@ -112,46 +93,36 @@ pub mod sephora_spain {
             if any_results && !urls.is_empty() {
                 Ok(urls)
             } else if any_results && urls.is_empty() {
-                Err(SearchError::NotEnoughtSimilarity)
+                Err(SearchError::NotEnoughSimilarity)
             } else {
                 Err(SearchError::NotFound)
             }
         }
 
-        /// Creates and initialize the product objetct.
+        /// Creates and initialize the product object.
         /// # Arguments
         /// document - The HTML document for the product to create.
         /// # Returns
         /// Product - The product created based on this HTML webpage.
         fn create_product(document: &Html) -> Product {
             let mut product = Product::default();
-
-            // Name of the product
-            let name = document
-                .select(&scraper::Selector::parse("h1>meta").unwrap())
+            let html = document
+                .select(&scraper::Selector::parse("html").unwrap())
                 .next()
-                .expect("not found any ElementRef with h1>meta")
-                .value()
-                .attr("content")
-                .unwrap()
-                .to_string();
+                .unwrap();
+
+            let name = helper::attribute_html_value(&html, "h1>meta", "content").unwrap();
             println!("{name}");
             product.set_name(name);
 
-            // Brand name
-            let brand = document
-                .select(&scraper::Selector::parse("span.brand-name>a").unwrap())
-                .next()
-                .expect("not found any ElementRef with span.brand-name>a")
-                .inner_html();
+            let brand = helper::inner_html_value(&html, "span.brand-name>a").unwrap();
             product.set_brand(brand);
 
-            // Tones
             let mut tones: Vec<Tone> = vec![];
-            match document
+            match html
                 .select(
                     &scraper::Selector::parse(
-                        "div#colorguide-colors>div.colorguide-variations-list",
+                        r#"div#colorguide-colors>div.colorguide-variations-list"#,
                     )
                     .unwrap(),
                 )
@@ -164,21 +135,18 @@ pub mod sephora_spain {
                         .select(&scraper::Selector::parse("div.variation-button-line").unwrap())
                         .collect();
 
-                    // Iterate over all the avaliable tones.
-                    // TODO: Check if the tone is sold out and dont add it or add it with a boolean indicating it.
-                    for tone in tones_list.iter() {
-                        // Tone name
-                        let tone_name = tone
-                            .select(&scraper::Selector::parse("span.variation-title").unwrap())
-                            .next()
-                            .expect("not found any ElementRef with span.variation-title")
-                            .inner_html()
-                            .trim()
-                            .to_string();
+                    // Iterate over all the available tones.
+                    // TODO: Check if the tone is sold out and don't add it or add it with a boolean indicating it.
+                    for tone_element in tones_list.iter() {
+                        let tone_name =
+                            helper::inner_html_value(tone_element, "span.variation-title")
+                                .unwrap()
+                                .trim()
+                                .to_string();
 
                         // Tone price standard and price sale
                         // NOTE: It has different layout if the product its on sale or not
-                        let (price_standard, price_sale) = match tone
+                        let (price_standard, price_sale) = match tone_element
                             .select(
                                 &scraper::Selector::parse(".price-sales-standard>span").unwrap(),
                             )
@@ -191,27 +159,21 @@ pub mod sephora_spain {
                             ),
                             // If None, it is on sale.
                             None => {
-                                let price_standard = tone
-                                    .select(
-                                        &scraper::Selector::parse("span.price-standard").unwrap(),
-                                    )
-                                    .next()
-                                    .unwrap()
-                                    .inner_html();
-                                let price_sale = tone
-                                    .select(
-                                        &scraper::Selector::parse("span.price-sales>span").unwrap(),
-                                    )
-                                    .next()
-                                    .unwrap()
-                                    .inner_html();
+                                let price_standard =
+                                    helper::inner_html_value(tone_element, "span.price-standard")
+                                        .unwrap();
+                                let price_sale =
+                                    helper::inner_html_value(tone_element, "span.price-sales>span")
+                                        .unwrap();
                                 (
                                     helper::parse_price_string(price_standard),
                                     Some(helper::parse_price_string(price_sale)),
                                 )
                             }
                         };
-                        tones.push(Tone::new(tone_name, price_standard, price_sale));
+
+                        // TODO: Find if the product is available. Right know we basically don't add it to the list.
+                        tones.push(Tone::new(tone_name, price_standard, price_sale, true));
                     }
                 }
                 // If None, this product does not have any tones.
@@ -219,9 +181,18 @@ pub mod sephora_spain {
             }
             product.set_tones(if tones.is_empty() { None } else { Some(tones) });
 
-            // TODO: Rating of the product.
+            let mut rating =
+                helper::inner_html_value(&html, "div.bv_numReviews_text>span").unwrap();
+            rating = if rating.is_empty() {
+                "0.0".to_string()
+            } else {
+                rating
+            };
+            product.set_rating(Some(helper::normalized_rating(
+                rating.parse::<f32>().unwrap(),
+                MAX_RATING,
+            )));
 
-            // product.set_rating(Some(helper::normalized_rating(rating.parse::<f32>().unwrap(), MAX_RATING)));
             product
         }
     }
@@ -229,7 +200,7 @@ pub mod sephora_spain {
     /// Scrappable trait implementation for SephoraSpain
     impl<'a> Scrappable for SephoraSpain<'a> {
         fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError> {
-            // We recieve a word like "This word" and we should search in format of "This+word".
+            // We receive a word like "This word" and we should search in format of "This+word".
             let formatted_name = name.replace(' ', "+");
             let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
             println!("GET: {query}");
