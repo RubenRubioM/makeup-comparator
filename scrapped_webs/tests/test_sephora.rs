@@ -17,7 +17,6 @@ mod sephora_spain {
             .unwrap();
         assert_eq!(products.len(), 1);
 
-        // TODO: Assert if the values are returned properly.
         let product = products.get(0).unwrap();
         assert_eq!(
             *product.name(),

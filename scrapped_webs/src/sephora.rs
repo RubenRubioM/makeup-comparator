@@ -138,12 +138,12 @@ pub mod spain {
                     // Iterate over all the available tones.
                     // TODO: Check if the tone is sold out and don't add it or add it with a boolean indicating it.
                     for tone_element in tones_list.iter() {
-                        // Tone name
                         let tone_name =
                             helper::inner_html_value(tone_element, "span.variation-title")
                                 .unwrap()
                                 .trim()
                                 .to_string();
+
                         // Tone price standard and price sale
                         // NOTE: It has different layout if the product its on sale or not
                         let (price_standard, price_sale) = match tone_element
@@ -172,8 +172,8 @@ pub mod spain {
                             }
                         };
 
-                        let available: bool = true;
-                        tones.push(Tone::new(tone_name, price_standard, price_sale, available));
+                        // TODO: Find if the product is available. Right know we basically don't add it to the list.
+                        tones.push(Tone::new(tone_name, price_standard, price_sale, true));
                     }
                 }
                 // If None, this product does not have any tones.
