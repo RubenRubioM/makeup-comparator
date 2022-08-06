@@ -112,13 +112,13 @@ pub mod sephora_spain {
             if any_results && !urls.is_empty() {
                 Ok(urls)
             } else if any_results && urls.is_empty() {
-                Err(SearchError::NotEnoughtSimilarity)
+                Err(SearchError::NotEnoughSimilarity)
             } else {
                 Err(SearchError::NotFound)
             }
         }
 
-        /// Creates and initialize the product objetct.
+        /// Creates and initialize the product object.
         /// # Arguments
         /// document - The HTML document for the product to create.
         /// # Returns
@@ -151,7 +151,7 @@ pub mod sephora_spain {
             match document
                 .select(
                     &scraper::Selector::parse(
-                        "div#colorguide-colors>div.colorguide-variations-list",
+                        r#"div#colorguide-colors>div.colorguide-variations-list"#,
                     )
                     .unwrap(),
                 )
@@ -164,8 +164,8 @@ pub mod sephora_spain {
                         .select(&scraper::Selector::parse("div.variation-button-line").unwrap())
                         .collect();
 
-                    // Iterate over all the avaliable tones.
-                    // TODO: Check if the tone is sold out and dont add it or add it with a boolean indicating it.
+                    // Iterate over all the available tones.
+                    // TODO: Check if the tone is sold out and don't add it or add it with a boolean indicating it.
                     for tone in tones_list.iter() {
                         // Tone name
                         let tone_name = tone
@@ -211,7 +211,9 @@ pub mod sephora_spain {
                                 )
                             }
                         };
-                        tones.push(Tone::new(tone_name, price_standard, price_sale));
+
+                        let available: bool = true;
+                        tones.push(Tone::new(tone_name, price_standard, price_sale, available));
                     }
                 }
                 // If None, this product does not have any tones.
@@ -229,7 +231,7 @@ pub mod sephora_spain {
     /// Scrappable trait implementation for SephoraSpain
     impl<'a> Scrappable for SephoraSpain<'a> {
         fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError> {
-            // We recieve a word like "This word" and we should search in format of "This+word".
+            // We receive a word like "This word" and we should search in format of "This+word".
             let formatted_name = name.replace(' ', "+");
             let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
             println!("GET: {query}");

@@ -9,16 +9,24 @@ pub struct Tone {
     name: String,
     /// The standard price.
     price_standard: f32,
-    ///The price in case it is on sale.
+    /// The price in case it is on sale.
     price_sales: Option<f32>,
+    /// Available flag.
+    available: bool,
 }
 
 impl Tone {
-    pub fn new(name: String, price_standard: f32, price_sales: Option<f32>) -> Self {
+    pub fn new(
+        name: String,
+        price_standard: f32,
+        price_sales: Option<f32>,
+        available: bool,
+    ) -> Self {
         Self {
             name,
             price_standard,
             price_sales,
+            available,
         }
     }
 
@@ -34,6 +42,10 @@ impl Tone {
     pub fn price_sales(&self) -> Option<f32> {
         self.price_sales
     }
+    /// Returns the available.
+    pub fn available(&self) -> bool {
+        self.available
+    }
     /// Sets the name of the product.
     pub fn set_name(&mut self, name: String) {
         self.name = name;
@@ -45,6 +57,10 @@ impl Tone {
     /// Sets the price if it is on sale.
     pub fn set_price_sales(&mut self, price_sales: Option<f32>) {
         self.price_sales = price_sales;
+    }
+    /// Sets if the product its available.
+    pub fn set_available(&mut self, available: bool) {
+        self.available = available;
     }
 }
 
@@ -81,6 +97,8 @@ pub struct Product {
     rating: Option<f32>,
     /// Similarity between the product name to search and the one found.
     similarity: f32,
+    /// Available of the product.
+    available: bool,
 }
 
 impl Product {
@@ -105,6 +123,7 @@ impl Product {
         tones: Option<Vec<Tone>>,
         rating: Option<f32>,
         similarity: f32,
+        available: bool,
     ) -> Self {
         Self {
             name,
@@ -115,6 +134,7 @@ impl Product {
             tones,
             rating,
             similarity,
+            available,
         }
     }
     /// Returns the name of the product.
@@ -149,6 +169,10 @@ impl Product {
     pub fn similarity(&self) -> f32 {
         self.similarity
     }
+    /// Returns the availability.
+    pub fn available(&self) -> bool {
+        self.available
+    }
     /// Sets the name of the product.
     pub fn set_name(&mut self, name: String) {
         self.name = name;
@@ -181,6 +205,10 @@ impl Product {
     pub fn set_similarity(&mut self, similarity: f32) {
         self.similarity = similarity;
     }
+    /// Sets the availability.
+    pub fn set_available(&mut self, set_available: bool) {
+        self.available = set_available;
+    }
 }
 
 impl Display for Product {
@@ -203,6 +231,7 @@ impl Display for Product {
             None => (),
         }
         out.push_str(format!("\nSimilarity: {}", self.similarity()).as_str());
+        out.push_str(format!("\nAvailable: {}", self.available()).as_str());
 
         writeln!(f, "{}", out)
     }

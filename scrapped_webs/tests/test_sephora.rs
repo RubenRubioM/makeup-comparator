@@ -5,8 +5,8 @@ mod sephora_spain {
     use scrapped_webs::scrappable::*;
     use scrapped_webs::sephora::sephora_spain::*;
 
-    /// Tests if the SephoraSpain::look_for_prducts(name) works when we search for a product and get redirected.
-    /// If at some point fails, might be because the webpage changed or the product for search is not avaliable anymore.
+    /// Tests if the SephoraSpain::look_for_products(name) works when we search for a product and get redirected.
+    /// If at some point fails, might be because the webpage changed or the product for search is not available anymore.
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithUrlRedirection_ThenSuccess() {
@@ -44,8 +44,8 @@ mod sephora_spain {
         );
     }
 
-    /// Tests if the SephoraSpain::look_for_prducts(name) works when the /search? path.
-    /// If at some point fails, might be because the webpage changed, the product for search is not avaliable anymore or there are new entries for this search.
+    /// Tests if the SephoraSpain::look_for_products(name) works when the /search? path.
+    /// If at some point fails, might be because the webpage changed, the product for search is not available anymore or there are new entries for this search.
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithSearchResults_ThenSuccess() {
@@ -57,8 +57,8 @@ mod sephora_spain {
         assert_eq!(products.len(), 2);
     }
 
-    /// Tests if the SephoraSpain::look_for_prducts(name) works when the /todos-los-productos/ path.
-    /// If at some point fails, might be because the webpage changed, the product for search is not avaliable anymore or there are new entries for this search.
+    /// Tests if the SephoraSpain::look_for_products(name) works when the /todos-los-productos/ path.
+    /// If at some point fails, might be because the webpage changed, the product for search is not available anymore or there are new entries for this search.
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithRedirectionToAllProducts_ThenSuccess() {
@@ -70,7 +70,7 @@ mod sephora_spain {
         assert!(true);
     }
 
-    /// Tests if the SephoraSpain::look_for_prducts(name) return errors properly.
+    /// Tests if the SephoraSpain::look_for_products(name) return errors properly.
     #[test]
     #[ignore]
     fn WhenCallingLookForProductsWithoutResults_ThenReturnErrors() {
@@ -81,7 +81,7 @@ mod sephora_spain {
             Ok(_) => panic!("We should not find any results"),
             Err(search_error) => match search_error {
                 SearchError::Timeout => panic!("{}", search_error),
-                SearchError::NotEnoughtSimilarity => panic!("{}", search_error),
+                SearchError::NotEnoughSimilarity => panic!("{}", search_error),
                 SearchError::NotFound => assert!(true),
             },
         }

@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use strsim::*;
 
-// TODO: Add tests to check what method of comparasion gives better results.
+// TODO: Add tests to check what method of comparison gives better results.
 pub fn compare_similarity(name1: &str, name2: &str) -> f32 {
     jaro_winkler(name1.to_lowercase().as_str(), name2.to_lowercase().as_str()) as f32
 }
@@ -67,7 +67,7 @@ where
 /// # Arguments
 ///
 /// rating - The rating value.
-/// max_rating - The maximum rating avaliable
+/// max_rating - The maximum rating available
 ///
 /// # Returns
 ///
