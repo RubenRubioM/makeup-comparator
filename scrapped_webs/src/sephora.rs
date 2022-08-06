@@ -13,6 +13,8 @@ use crate::{
 use scraper::ElementRef;
 use scraper::Html;
 
+use ansi_term::Colour::RGB;
+
 /// Module for sephora.es
 pub mod sephora_spain {
     use super::*;
@@ -101,10 +103,13 @@ pub mod sephora_spain {
                 if similarity >= self.config.min_similarity() {
                     urls.push(url.to_string());
                 } else {
-                    eprintln!(
-                        "Discarding: {} with {:.2}% of similarity because it is below the minimum",
-                        full_name,
-                        similarity * 100.0
+                    println!(
+                        "{}",
+                        RGB(255, 121, 0).normal().paint(format!(
+                            "Discarding [{:.2}%]: {}",
+                            similarity * 100.0,
+                            full_name
+                        ))
                     );
                 }
             }

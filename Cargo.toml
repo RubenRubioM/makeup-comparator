@@ -12,6 +12,8 @@ members = [
 name = "makeup-comparator"
 
 [dependencies]
+ansi_term = "0.12.1"
+clap = { version = "3.2.16", features = ["derive"] }
 scrapped-webs = {path = "scrapped_webs"}
 
 [dev-dependencies]
