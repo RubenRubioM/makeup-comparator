@@ -183,7 +183,7 @@ pub mod spain {
 
             let mut rating =
                 helper::inner_html_value(&html, "div.bv_numReviews_text>span").unwrap();
-            rating = if rating == "" {
+            rating = if rating.is_empty() {
                 "0.0".to_string()
             } else {
                 rating
