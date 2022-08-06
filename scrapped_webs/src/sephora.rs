@@ -14,7 +14,7 @@ use scraper::ElementRef;
 use scraper::Html;
 
 /// Module for sephora.es
-pub mod sephora_spain {
+pub mod spain {
     use super::*;
     // Webpage url.
     const URL: &str = "https://www.sephora.es/";
@@ -53,6 +53,7 @@ pub mod sephora_spain {
         ) -> Result<Vec<String>, SearchError> {
             let mut urls: Vec<String> = Vec::new();
             let mut any_results = false;
+
             // Select the div that wraps the information for every result found.
             let selector = scraper::Selector::parse(
                 "#search-result-items>li>div>.product-info-wrapper>.product-info",
@@ -70,33 +71,13 @@ pub mod sephora_spain {
                     break;
                 }
 
-                // Find the brand inside the HTML.
-                let brand = result
-                    .select(&scraper::Selector::parse("span.product-brand").unwrap())
-                    .next()
-                    .expect("not found any ElementRef with .product-info>span.product-brand")
-                    .inner_html();
-                // Find the product title.
-                let title = result
-                    .select(&scraper::Selector::parse("h3").unwrap())
-                    .next()
-                    .expect("not found any ElementRef with .product-info>h3")
-                    .value()
-                    .attr("title")
-                    .expect("attribute (title) inside .product-info>h3 not found");
-                // Find the url.
-                let url = result
-                    .select(&scraper::Selector::parse("a").unwrap())
-                    .next()
-                    .expect("not found any ElementRef with .product-info>a")
-                    .value()
-                    .attr("href")
-                    .expect("attribute (href) inside .product-info>a not found");
+                let brand = helper::inner_html_value(&result, "span.product-brand").unwrap();
+                let title = helper::attribute_html_value(&result, "h3", "title").unwrap();
+                let url = helper::attribute_html_value(&result, "a", "href").unwrap();
 
                 // full_name format = {Brand} {Title} = {Rare Beauty} {Kind Words - Barra de labios mate}
-                let full_name = brand + " " + title;
+                let full_name = brand + " " + title.as_str();
 
-                // Unsafe: using a mutable static variable (common::MIN_SIMILARITY).
                 let similarity = helper::compare_similarity(name, &full_name);
                 if similarity >= self.config.min_similarity() {
                     urls.push(url.to_string());
@@ -125,30 +106,20 @@ pub mod sephora_spain {
         /// Product - The product created based on this HTML webpage.
         fn create_product(document: &Html) -> Product {
             let mut product = Product::default();
-
-            // Name of the product
-            let name = document
-                .select(&scraper::Selector::parse("h1>meta").unwrap())
+            let html = document
+                .select(&scraper::Selector::parse("html").unwrap())
                 .next()
-                .expect("not found any ElementRef with h1>meta")
-                .value()
-                .attr("content")
-                .unwrap()
-                .to_string();
+                .unwrap();
+
+            let name = helper::attribute_html_value(&html, "h1>meta", "content").unwrap();
             println!("{name}");
             product.set_name(name);
 
-            // Brand name
-            let brand = document
-                .select(&scraper::Selector::parse("span.brand-name>a").unwrap())
-                .next()
-                .expect("not found any ElementRef with span.brand-name>a")
-                .inner_html();
+            let brand = helper::inner_html_value(&html, "span.brand-name>a").unwrap();
             product.set_brand(brand);
 
-            // Tones
             let mut tones: Vec<Tone> = vec![];
-            match document
+            match html
                 .select(
                     &scraper::Selector::parse(
                         r#"div#colorguide-colors>div.colorguide-variations-list"#,
@@ -166,19 +137,16 @@ pub mod sephora_spain {
 
                     // Iterate over all the available tones.
                     // TODO: Check if the tone is sold out and don't add it or add it with a boolean indicating it.
-                    for tone in tones_list.iter() {
+                    for tone_element in tones_list.iter() {
                         // Tone name
-                        let tone_name = tone
-                            .select(&scraper::Selector::parse("span.variation-title").unwrap())
-                            .next()
-                            .expect("not found any ElementRef with span.variation-title")
-                            .inner_html()
-                            .trim()
-                            .to_string();
-
+                        let tone_name =
+                            helper::inner_html_value(tone_element, "span.variation-title")
+                                .unwrap()
+                                .trim()
+                                .to_string();
                         // Tone price standard and price sale
                         // NOTE: It has different layout if the product its on sale or not
-                        let (price_standard, price_sale) = match tone
+                        let (price_standard, price_sale) = match tone_element
                             .select(
                                 &scraper::Selector::parse(".price-sales-standard>span").unwrap(),
                             )
@@ -191,20 +159,12 @@ pub mod sephora_spain {
                             ),
                             // If None, it is on sale.
                             None => {
-                                let price_standard = tone
-                                    .select(
-                                        &scraper::Selector::parse("span.price-standard").unwrap(),
-                                    )
-                                    .next()
-                                    .unwrap()
-                                    .inner_html();
-                                let price_sale = tone
-                                    .select(
-                                        &scraper::Selector::parse("span.price-sales>span").unwrap(),
-                                    )
-                                    .next()
-                                    .unwrap()
-                                    .inner_html();
+                                let price_standard =
+                                    helper::inner_html_value(tone_element, "span.price-standard")
+                                        .unwrap();
+                                let price_sale =
+                                    helper::inner_html_value(tone_element, "span.price-sales>span")
+                                        .unwrap();
                                 (
                                     helper::parse_price_string(price_standard),
                                     Some(helper::parse_price_string(price_sale)),

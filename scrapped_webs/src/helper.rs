@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use scraper::ElementRef;
 use strsim::*;
 
 // TODO: Add tests to check what method of comparison gives better results.
@@ -80,6 +81,52 @@ where
 #[allow(dead_code)]
 pub fn normalized_rating(rating: f32, max_rating: f32) -> f32 {
     rating * 5.0 / max_rating
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum HtmlSearchError {
+    ElementNotFound(String),
+    AttributeNotFound(String),
+}
+
+impl std::fmt::Debug for HtmlSearchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HtmlSearchError::ElementNotFound(selector) => {
+                write!(f, "selector: \"{selector}\" not found.")
+            }
+            HtmlSearchError::AttributeNotFound(attribute) => {
+                write!(f, "attribute: \"{attribute}\" not found.")
+            }
+        }
+    }
+}
+
+pub fn inner_html_value(element: &ElementRef, selector: &str) -> Result<String, HtmlSearchError> {
+    match element
+        .select(&scraper::Selector::parse(selector).unwrap())
+        .next()
+    {
+        Some(value) => Ok(value.inner_html()),
+        None => Err(HtmlSearchError::ElementNotFound(selector.to_string())),
+    }
+}
+
+pub fn attribute_html_value(
+    element: &ElementRef,
+    selector: &str,
+    attribute: &str,
+) -> Result<String, HtmlSearchError> {
+    match element
+        .select(&scraper::Selector::parse(selector).unwrap())
+        .next()
+    {
+        Some(value) => match value.value().attr(attribute) {
+            Some(attribute_value) => Ok(attribute_value.to_string()),
+            None => Err(HtmlSearchError::AttributeNotFound(attribute.to_string())),
+        },
+        None => Err(HtmlSearchError::ElementNotFound(selector.to_string())),
+    }
 }
 
 #[cfg(test)]

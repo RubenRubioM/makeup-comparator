@@ -3,7 +3,7 @@
 mod sephora_spain {
     use scrapped_webs::configuration::Configuration;
     use scrapped_webs::scrappable::*;
-    use scrapped_webs::sephora::sephora_spain::*;
+    use scrapped_webs::sephora::spain::*;
 
     /// Tests if the SephoraSpain::look_for_products(name) works when we search for a product and get redirected.
     /// If at some point fails, might be because the webpage changed or the product for search is not available anymore.
