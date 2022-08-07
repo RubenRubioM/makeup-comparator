@@ -15,6 +15,24 @@ use scraper::Html;
 
 use ansi_term::Colour::RGB;
 
+/* sephora.es logic explanation
+1 - We search throw the standard search endpoint "buscar?q=" to retrieve the results.
+2 - When we get redirected to the searched products we have a grid with all the products found.
+    2.1 - If we found only 1 result we got redirected to the product page.
+    2.2 - If we found for specific category such as "barra de labios" we got redirected to an specific url too but with the same logic that when we find results.
+3 - We collect the urls for specifics products throw de <href> in the grid.
+4 - We then make a petition to go to the specific url for every product found.
+5 - Once we are in the specific product page "https://www.sephora.es/p/NAME.html"
+    5.1 - Retrieve the "name" of the product from the attribute "content" inside the "h1>meta".
+    5.2 - Retrieve the "brand" of the product from the inner html in "span.brand-name>a".
+    5.2 - Retrieve the tones from a submenu in "div#colorguide-colors>div.colorguide-variations-list".
+        5.2.1 - If this returns None, the product do not have any tones available.
+        5.2.2 - If this returns Some, we iterate for every tone.
+            5.2.2.1 - Retrieve the "name" of the product from the inner html in "span.variation-title".
+            5.2.2.2 - If we find the element ".price-sales-standard>span" then the element is not on sale and we add this to the "price_standard".
+            5.2.2.3 - If we do not find the element ".price-sales-standard>span" then the element is on sale and we find the "price_standard" in "span.price-standard" and the "price_sales" in "span.price-sales>span".
+    5.3 - Finally, we retrieve the "rating" from the element "div.bv_numReviews_text>span". If it returns an empty string is because there is no reviews yet.
+*/
 /// Module for sephora.es
 pub mod spain {
     use super::*;
