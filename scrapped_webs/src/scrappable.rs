@@ -1,4 +1,6 @@
 //! Trait that defines the scrappable trait
+use scraper::Html;
+
 use crate::product::Product;
 
 /// Enumeration of possible error when trying to search a product.
@@ -33,4 +35,21 @@ pub trait Scrappable {
     /// Product - A vector with the similar products that matches the name.
     /// Box<dyn Error> - If couldn't find the product.
     fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError>;
+
+    /// Returns the url of the products found.
+    /// # Arguments
+    /// document - The search page HTML document with some or none products found.
+    /// name - The name provided by the user to find.
+    /// # Returns
+    /// Ok - Vector with the urls found in the search page.
+    /// Err - Search error.
+    fn search_results_urls(&self, document: &Html, name: &str) -> Result<Vec<String>, SearchError>;
+
+    /// Creates and initialize the product object.
+    ///
+    /// # Arguments
+    /// document - The HTML document for the product to create.
+    /// # Returns
+    /// Product - The product created based on this HTML webpage.
+    fn create_product(document: &Html) -> Product;
 }
