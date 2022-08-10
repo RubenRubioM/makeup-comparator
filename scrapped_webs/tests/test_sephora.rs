@@ -1,15 +1,22 @@
-#[allow(non_snake_case)]
 #[cfg(test)]
 mod sephora_spain {
     use scrapped_webs::configuration::Configuration;
     use scrapped_webs::scrappable::*;
-    use scrapped_webs::sephora::spain::*;
+    use scrapped_webs::webs::sephora::spain::SephoraSpain;
+
+    /// Tests if SephoraSpain can be created correctly.
+    #[test]
+    fn sephora_spain_instantiation() {
+        let conf: Configuration = Configuration::new(0.0, usize::MAX);
+        let _ = SephoraSpain::new(&conf);
+        assert!(true);
+    }
 
     /// Tests if the SephoraSpain::look_for_products(name) works when we search for a product and get redirected.
     /// If at some point fails, might be because the webpage changed or the product for search is not available anymore.
     #[test]
     #[ignore]
-    fn WhenCallingLookForProductsWithUrlRedirection_ThenSuccess() {
+    fn search_has_url_redirection() {
         let conf: Configuration = Configuration::new(0.0, usize::MAX);
         let sephora_spain = SephoraSpain::new(&conf);
         let products = sephora_spain
@@ -47,7 +54,7 @@ mod sephora_spain {
     /// If at some point fails, might be because the webpage changed, the product for search is not available anymore or there are new entries for this search.
     #[test]
     #[ignore]
-    fn WhenCallingLookForProductsWithSearchResults_ThenSuccess() {
+    fn search_has_results() {
         let conf: Configuration = Configuration::new(0.0, usize::MAX);
         let sephora_spain = SephoraSpain::new(&conf);
         let products = sephora_spain
@@ -60,7 +67,7 @@ mod sephora_spain {
     /// If at some point fails, might be because the webpage changed, the product for search is not available anymore or there are new entries for this search.
     #[test]
     #[ignore]
-    fn WhenCallingLookForProductsWithRedirectionToAllProducts_ThenSuccess() {
+    fn search_redirect_to_all_products() {
         let conf: Configuration = Configuration::new(0.0, usize::MAX);
         let sephora_spain = SephoraSpain::new(&conf);
         sephora_spain
@@ -72,7 +79,7 @@ mod sephora_spain {
     /// Tests if the SephoraSpain::look_for_products(name) return errors properly.
     #[test]
     #[ignore]
-    fn WhenCallingLookForProductsWithoutResults_ThenReturnErrors() {
+    fn search_has_no_results() {
         let conf: Configuration = Configuration::new(0.0, usize::MAX);
         let sephora_spain = SephoraSpain::new(&conf);
 

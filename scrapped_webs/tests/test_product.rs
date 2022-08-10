@@ -1,11 +1,10 @@
-#[allow(non_snake_case)]
 #[cfg(test)]
 mod product {
     use scrapped_webs::product::*;
 
     /// Tests the Tone::new function.
     #[test]
-    fn WhenCreatingTones_ThenSuccess() {
+    fn tone_instantiation() {
         let name: String = String::from("Tone1");
         let price_standard: f32 = 50.0;
         let price_sales: Option<f32> = Some(25.0);
@@ -20,7 +19,7 @@ mod product {
 
     /// Tests the Product::new function.
     #[test]
-    fn WhenCreatingAProduct_ThenSuccess() {
+    fn product_instantiation() {
         let name: String = String::from("Test");
         let brand: String = String::from("Test Brand");
         let link: String = String::from("http://test.es");

@@ -58,14 +58,65 @@ pub mod spain {
         pub fn new(config: &'a Configuration) -> Self {
             Self { config }
         }
+    }
 
-        /// Returns the url of the products found.
-        /// # Arguments
-        /// document - The search page HTML document with some or none products found.
-        /// name - The name provided by the user to find.
-        /// # Returns
-        /// Ok - Vector with the urls found in the search page.
-        /// Err - Search error.
+    /// Scrappable trait implementation for SephoraSpain.
+    impl<'a> Scrappable for SephoraSpain<'a> {
+        fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError> {
+            // We receive a word like "This word" and we should search in format of "This+word".
+            let formatted_name = name.replace(' ', "+");
+            let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
+            println!("GET: {query}");
+
+            // If the name match exactly, SephoraSpain redirects you to the product page.
+            let response = reqwest::blocking::get(&query).unwrap();
+            let response_url = response.url().to_owned();
+            let document = scraper::Html::parse_document(&response.text().unwrap());
+            let mut products = Vec::<Product>::new();
+
+            // If it only find 1 result it redirects to a product page directly with /p/product_link.html
+            if response_url.as_str().contains("/p/") {
+                println!("GET: {}", response_url);
+                let mut product = SephoraSpain::create_product(&document);
+                product.set_link(response_url.to_string());
+                let full_name = format!("{} {}", product.brand(), product.name());
+                product.set_similarity(helper::compare_similarity(
+                    full_name.as_str(),
+                    name.as_str(),
+                ));
+                products.push(product);
+            } else {
+                // Get the urls for all the coincidence we found in the search with the given `name`
+                let products_urls = self.search_results_urls(&document, name.as_str())?;
+                println!("Found {} results", products_urls.len());
+
+                // Use threads to perform concurrency when sending petitions.
+                let mut handles = Vec::<JoinHandle<Product>>::new();
+                for url in products_urls {
+                    // Make a copy to be able to send via threads.
+                    let name_copy = name.clone();
+                    handles.push(thread::spawn(move || {
+                        println!("GET: {url}");
+                        let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
+                        let document = scraper::Html::parse_document(&response);
+                        let mut product: Product = SephoraSpain::create_product(&document);
+                        product.set_link(url);
+                        let full_name = format!("{} {}", product.brand(), product.name());
+                        product.set_similarity(helper::compare_similarity(
+                            full_name.as_str(),
+                            name_copy.as_str(),
+                        ));
+                        product
+                    }));
+                }
+                for handle in handles {
+                    products.push(handle.join().unwrap());
+                }
+            }
+
+            Ok(products)
+        }
+
         fn search_results_urls(
             &self,
             document: &Html,
@@ -122,11 +173,6 @@ pub mod spain {
             }
         }
 
-        /// Creates and initialize the product object.
-        /// # Arguments
-        /// document - The HTML document for the product to create.
-        /// # Returns
-        /// Product - The product created based on this HTML webpage.
         fn create_product(document: &Html) -> Product {
             let mut product = Product::default();
             let html = document
@@ -217,64 +263,6 @@ pub mod spain {
             )));
 
             product
-        }
-    }
-
-    /// Scrappable trait implementation for SephoraSpain
-    impl<'a> Scrappable for SephoraSpain<'a> {
-        fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError> {
-            // We receive a word like "This word" and we should search in format of "This+word".
-            let formatted_name = name.replace(' ', "+");
-            let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
-            println!("GET: {query}");
-
-            // If the name match exactly, SephoraSpain redirects you to the product page.
-            let response = reqwest::blocking::get(&query).unwrap();
-            let response_url = response.url().to_owned();
-            let document = scraper::Html::parse_document(&response.text().unwrap());
-            let mut products = Vec::<Product>::new();
-
-            // If it only find 1 result it redirects to a product page directly with /p/product_link.html
-            if response_url.as_str().contains("/p/") {
-                println!("GET: {}", response_url);
-                let mut product = SephoraSpain::create_product(&document);
-                product.set_link(response_url.to_string());
-                let full_name = format!("{} {}", product.brand(), product.name());
-                product.set_similarity(helper::compare_similarity(
-                    full_name.as_str(),
-                    name.as_str(),
-                ));
-                products.push(product);
-            } else {
-                // Get the urls for all the coincidence we found in the search with the given `name`
-                let products_urls = self.search_results_urls(&document, name.as_str())?;
-                println!("Found {} results", products_urls.len());
-
-                // Use threads to perform concurrency when sending petitions.
-                let mut handles = Vec::<JoinHandle<Product>>::new();
-                for url in products_urls {
-                    // Make a copy to be able to send via threads.
-                    let name_copy = name.clone();
-                    handles.push(thread::spawn(move || {
-                        println!("GET: {url}");
-                        let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
-                        let document = scraper::Html::parse_document(&response);
-                        let mut product: Product = SephoraSpain::create_product(&document);
-                        product.set_link(url);
-                        let full_name = format!("{} {}", product.brand(), product.name());
-                        product.set_similarity(helper::compare_similarity(
-                            full_name.as_str(),
-                            name_copy.as_str(),
-                        ));
-                        product
-                    }));
-                }
-                for handle in handles {
-                    products.push(handle.join().unwrap());
-                }
-            }
-
-            Ok(products)
         }
     }
 }
