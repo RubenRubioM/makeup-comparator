@@ -13,6 +13,8 @@ pub struct Tone {
     price_sales: Option<f32>,
     /// Available flag.
     available: bool,
+    /// Possible url if it is not directly in the same webpage.
+    url: Option<String>,
 }
 
 impl Tone {
@@ -21,12 +23,14 @@ impl Tone {
         price_standard: f32,
         price_sales: Option<f32>,
         available: bool,
+        url: Option<String>,
     ) -> Self {
         Self {
             name,
             price_standard,
             price_sales,
             available,
+            url,
         }
     }
 
@@ -46,6 +50,10 @@ impl Tone {
     pub fn available(&self) -> bool {
         self.available
     }
+    /// Returns the url.
+    pub fn url(&self) -> Option<String> {
+        self.url.clone()
+    }
     /// Sets the name of the product.
     pub fn set_name(&mut self, name: String) {
         self.name = name;
@@ -61,6 +69,10 @@ impl Tone {
     /// Sets if the product its available.
     pub fn set_available(&mut self, available: bool) {
         self.available = available;
+    }
+    /// Sets the URL.
+    pub fn set_url(&mut self, url: Option<String>) {
+        self.url = url;
     }
 }
 

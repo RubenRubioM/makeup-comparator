@@ -1,7 +1,7 @@
 //! Trait that defines the scrappable trait
-use scraper::Html;
+use scraper::{ElementRef, Html};
 
-use crate::product::Product;
+use crate::product::{Product, Tone};
 
 /// Enumeration of possible error when trying to search a product.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -52,4 +52,12 @@ pub trait Scrappable {
     /// # Returns
     /// Product - The product created based on this HTML webpage.
     fn create_product(document: &Html) -> Product;
+
+    /// Creates and initialize a tone for a product.
+    ///
+    /// # Arguments
+    /// element - The HTML element containing the information fo the tone (could be the hole website).
+    /// # Returns
+    /// Tone - The individual tone.
+    fn create_tone(element: &ElementRef) -> Tone;
 }

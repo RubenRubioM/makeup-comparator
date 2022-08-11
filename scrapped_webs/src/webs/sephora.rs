@@ -131,27 +131,25 @@ pub mod spain {
             )
             .unwrap();
 
-            let results = document.select(&selector);
+            let items = document.select(&selector);
             let mut num_results = 0;
-            for result in results {
-                any_results = true;
-                // Check if we reach the maximum number of results
-                if num_results != self.config.max_results() {
-                    num_results += 1
-                } else {
-                    break;
-                }
 
-                let brand = helper::inner_html_value(&result, "span.product-brand").unwrap();
-                let title = helper::attribute_html_value(&result, "h3", "title").unwrap();
-                let url = helper::attribute_html_value(&result, "a", "href").unwrap();
+            for item in items {
+                let brand = helper::inner_html_value(&item, "span.product-brand").unwrap();
+                let title = helper::attribute_html_value(&item, "h3", "title").unwrap();
+                let url = helper::attribute_html_value(&item, "a", "href").unwrap();
 
                 // full_name format = {Brand} {Title} = {Rare Beauty} {Kind Words - Barra de labios mate}
                 let full_name = brand + " " + title.as_str();
-
                 let similarity = helper::compare_similarity(name, &full_name);
+
                 if similarity >= self.config.min_similarity() {
                     urls.push(url.to_string());
+                    any_results = true;
+                    num_results += 1;
+                    if num_results == self.config.max_results() {
+                        break;
+                    }
                 } else {
                     println!(
                         "{}",
@@ -207,42 +205,7 @@ pub mod spain {
                     // Iterate over all the available tones.
                     // TODO: Check if the tone is sold out and don't add it or add it with a boolean indicating it.
                     for tone_element in tones_list.iter() {
-                        let tone_name =
-                            helper::inner_html_value(tone_element, "span.variation-title")
-                                .unwrap()
-                                .trim()
-                                .to_string();
-
-                        // Tone price standard and price sale
-                        // NOTE: It has different layout if the product its on sale or not
-                        let (price_standard, price_sale) = match tone_element
-                            .select(
-                                &scraper::Selector::parse(".price-sales-standard>span").unwrap(),
-                            )
-                            .next()
-                        {
-                            // If Some, it is not on sale.
-                            Some(price_standard) => (
-                                helper::parse_price_string(price_standard.inner_html()),
-                                None,
-                            ),
-                            // If None, it is on sale.
-                            None => {
-                                let price_standard =
-                                    helper::inner_html_value(tone_element, "span.price-standard")
-                                        .unwrap();
-                                let price_sale =
-                                    helper::inner_html_value(tone_element, "span.price-sales>span")
-                                        .unwrap();
-                                (
-                                    helper::parse_price_string(price_standard),
-                                    Some(helper::parse_price_string(price_sale)),
-                                )
-                            }
-                        };
-
-                        // TODO: Find if the product is available. Right know we basically don't add it to the list.
-                        tones.push(Tone::new(tone_name, price_standard, price_sale, true));
+                        tones.push(Self::create_tone(tone_element));
                     }
                 }
                 // If None, this product does not have any tones.
@@ -263,6 +226,39 @@ pub mod spain {
             )));
 
             product
+        }
+
+        fn create_tone(element: &ElementRef) -> Tone {
+            // TODO: Find if the product is available. Right know we basically don't add it to the list.
+            let tone_name = helper::inner_html_value(element, "span.variation-title")
+                .unwrap()
+                .trim()
+                .to_string();
+
+            // Tone price standard and price sale
+            // NOTE: It has different layout if the product its on sale or not
+            let (price_standard, price_sale) = match element
+                .select(&scraper::Selector::parse(".price-sales-standard>span").unwrap())
+                .next()
+            {
+                // If Some, it is not on sale.
+                Some(price_standard) => (
+                    helper::parse_price_string(price_standard.inner_html()),
+                    None,
+                ),
+                // If None, it is on sale.
+                None => {
+                    let price_standard =
+                        helper::inner_html_value(element, "span.price-standard").unwrap();
+                    let price_sale =
+                        helper::inner_html_value(element, "span.price-sales>span").unwrap();
+                    (
+                        helper::parse_price_string(price_standard),
+                        Some(helper::parse_price_string(price_sale)),
+                    )
+                }
+            };
+            Tone::new(tone_name, price_standard, price_sale, true, None)
         }
     }
 }

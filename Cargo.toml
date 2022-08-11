@@ -16,5 +16,8 @@ ansi_term = "0.12.1"
 clap = { version = "3.2.16", features = ["derive"] }
 scrapped-webs = {path = "scrapped_webs"}
 
+[profile.release]
+opt-level = 3
+
 [dev-dependencies]
 rusty-hook = "^0.11.2"
