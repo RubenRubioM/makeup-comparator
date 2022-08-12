@@ -9,12 +9,20 @@ mod product {
         let price_standard: f32 = 50.0;
         let price_sales: Option<f32> = Some(25.0);
         let available: bool = true;
-        let tone: Tone = Tone::new(name.clone(), price_standard, price_sales, available);
+        let url: Option<String> = Some(String::from("www.tone.es"));
+        let tone: Tone = Tone::new(
+            name.clone(),
+            price_standard,
+            price_sales,
+            available,
+            url.clone(),
+        );
 
         assert_eq!(*tone.name(), name);
         assert_eq!(tone.price_standard(), price_standard);
         assert_eq!(tone.price_sales().unwrap(), price_sales.unwrap());
         assert_eq!(tone.available(), available);
+        assert_eq!(tone.url(), url);
     }
 
     /// Tests the Product::new function.
@@ -27,11 +35,13 @@ mod product {
         let price_standard: f32 = 50.0;
         let price_sales: Option<f32> = Some(25.0);
         let available: bool = true;
+        let url: Option<String> = Some(String::from("www.tone.es"));
         let tones: Option<Vec<Tone>> = Some(vec![Tone::new(
             tone_name.clone(),
             price_standard,
             price_sales,
             available,
+            url.clone(),
         )]);
         let rating: Option<f32> = Some(4.5);
         let similarity: f32 = 0.86;
@@ -69,5 +79,6 @@ mod product {
             product.tones().unwrap().first().unwrap().available(),
             available
         );
+        assert_eq!(product.tones().unwrap().first().unwrap().url(), url);
     }
 }
