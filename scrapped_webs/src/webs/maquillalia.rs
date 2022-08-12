@@ -4,11 +4,13 @@
 1 - We search throw the standard search endpoint "search.php?buscar=" to retrieve the results.
 2 - We retrieve the products in a grid of 20 products per page.
     2.1 - To retrieve more products we have to make more petitions with "&page=n" until we reach the last product.
+    2.2 - We check if we reached the final page checking the number of products in "div.NumPro>strong". If we are at this page we break the loop.
 3 - We can retrieve the grid with the product items with the selector "div.ListProds>div".
     NOTE: Maquillalia shows also the tones for a product because they are individual URLS, we will filter those and treat them at product page level.
-    3.1 - To filter them we get the title in format {Brand} - {Name} - {Tone} and format it to remove the tone part and only store the first of them.
+    3.1 - We detect if we do not have any results if we have the element "div.msje-wrng>div.msje-icon".
+    3.2 - To filter them we get the title in format {Brand} - {Name} - {Tone} and format it to remove the tone part and only store the first of them.
             This way if we find 4 items that are 1 but with four different tones, we will only store the first one and redirect to it.
-    3.2 - We get the full name with "h3.Title>a" and the URL with the "href" attribute.
+    3.3 - We get the full name with "h3.Title>a" and the URL with the "href" attribute.
 */
 
 use std::thread::JoinHandle;
@@ -119,8 +121,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let mut any_results = false;
 
         // Check if we find the flag that indicates that we did not find any results.
-        if let Ok(_) =
-            helper::inner_html_value(&document.root_element(), "div.msje-wrng>div.msje-icon")
+        if helper::inner_html_value(&document.root_element(), "div.msje-wrng>div.msje-icon").is_ok()
         {
             return Err(SearchError::NotFound);
         }
