@@ -11,7 +11,7 @@
     3.2 - We get the full name with "h3.Title>a" and the URL with the "href" attribute.
 */
 
-use std::thread::{self, JoinHandle};
+use std::thread::JoinHandle;
 
 use crate::configuration::Configuration;
 use crate::helper;
@@ -23,6 +23,10 @@ use ansi_term::Colour::RGB;
 const URL: &str = "https://www.maquillalia.com/";
 // Suffix for searching in the website.
 const SEARCH_SUFFIX: &str = "search.php?buscar=";
+// Suffix for pagination.
+const PAGINATION_SUFFIX: &str = "page=";
+// Items showing per page used to determine if we reach the last page of products.
+const ITEMS_PER_PAGE: usize = 20;
 // Maximum rating for SephoraSpain.
 const _MAX_RATING: f32 = 5.0;
 
@@ -43,24 +47,48 @@ impl<'a> Scrappable for Maquillalia<'a> {
     fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError> {
         // We receive a word like "This word" and we should search in format of "This+word".
         let formatted_name = name.replace(' ', "+");
-        let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
-        println!("GET: {query}");
-
-        // If the name match exactly, SephoraSpain redirects you to the product page.
-        let response = reqwest::blocking::get(&query).unwrap();
-        let document = scraper::Html::parse_document(&response.text().unwrap());
+        let mut page: usize = 1;
+        let mut is_last_page: bool = false;
         let mut products = Vec::<Product>::new();
+        let mut products_urls: Vec<String> = vec![];
 
-        // Get the urls for all the coincidence we found in the search with the given `name`
-        let products_urls = self.search_results_urls(&document, name.as_str())?;
+        // We have to search for all the pages to retrieve the products.
+        // TODO: Im not sure if i can parallelize and preserve the order of insertion in the products_urls vector in order by page.
+        while !is_last_page {
+            let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}&{PAGINATION_SUFFIX}{page}");
+            println!("GET: {query}");
+
+            let response = reqwest::blocking::get(&query).unwrap();
+            let document = scraper::Html::parse_document(&response.text().unwrap());
+            let total_results =
+                helper::inner_html_value(&document.root_element(), "div.NumPro>strong").unwrap();
+            // Get the urls for all the coincidence we found in the search with the given `name`
+            let page_products_urls = self.search_results_urls(&document, name.as_str())?;
+            for product_url in page_products_urls {
+                products_urls.push(product_url);
+            }
+
+            page += 1;
+            let actual_items = page * ITEMS_PER_PAGE;
+            if self.config.max_results() <= products_urls.len()
+                || actual_items >= total_results.parse().unwrap()
+            {
+                is_last_page = true;
+            }
+
+            while products_urls.len() > self.config.max_results() {
+                products_urls.pop();
+            }
+        }
+
         println!("Found {} results", products_urls.len());
 
         // Use threads to perform concurrency when sending petitions.
-        let mut handles = Vec::<JoinHandle<Product>>::new();
+        let mut create_product_handles = Vec::<JoinHandle<Product>>::new();
         for url in products_urls {
             // Make a copy to be able to send via threads.
             let name_copy = name.clone();
-            handles.push(thread::spawn(move || {
+            create_product_handles.push(std::thread::spawn(move || {
                 println!("GET: {url}");
                 let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
                 let document = scraper::Html::parse_document(&response);
@@ -74,7 +102,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
                 product
             }));
         }
-        for handle in handles {
+        for handle in create_product_handles {
             products.push(handle.join().unwrap());
         }
         Ok(products)
@@ -90,10 +118,16 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let mut urls: Vec<String> = Vec::new();
         let mut any_results = false;
 
+        // Check if we find the flag that indicates that we did not find any results.
+        if let Ok(_) =
+            helper::inner_html_value(&document.root_element(), "div.msje-wrng>div.msje-icon")
+        {
+            return Err(SearchError::NotFound);
+        }
+
         let products_grid_selector = scraper::Selector::parse("div.ListProds>div").unwrap();
         // Select the div that wraps the information for every result found.
         let items = document.select(&products_grid_selector);
-        let mut num_results = 0;
         // The name of products to store only one and skip the next's.
         let mut individual_products: Vec<String> = Vec::new();
 
@@ -116,10 +150,6 @@ impl<'a> Scrappable for Maquillalia<'a> {
                 individual_products.push(full_name);
                 urls.push(url.to_string());
                 any_results = true;
-                num_results += 1;
-                if num_results == self.config.max_results() {
-                    break;
-                }
             } else {
                 println!(
                     "{}",
