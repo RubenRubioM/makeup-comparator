@@ -91,7 +91,7 @@ impl Display for Tone {
 }
 
 /// Defines a product we can obtain web scraping the website
-#[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
 pub struct Product {
     /// The product name.
     name: String,
@@ -220,6 +220,26 @@ impl Product {
     /// Sets the availability.
     pub fn set_available(&mut self, set_available: bool) {
         self.available = set_available;
+    }
+    /// Adds a new Tone.
+    pub fn add_tone(&mut self, tone: Tone) {
+        self.tones.as_mut().unwrap().push(tone);
+    }
+}
+
+impl Default for Product {
+    fn default() -> Self {
+        Self {
+            name: Default::default(),
+            brand: Default::default(),
+            link: Default::default(),
+            price_standard: Default::default(),
+            price_sales: Default::default(),
+            rating: Default::default(),
+            similarity: Default::default(),
+            available: Default::default(),
+            tones: Some(vec![]),
+        }
     }
 }
 

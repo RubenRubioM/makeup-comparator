@@ -12,6 +12,32 @@ mod maquillalia {
         assert!(true);
     }
 
+    /// Tests the parsing between the full name in Maquillalia and a custom version without the final Tone specification.
+    #[test]
+    fn get_product_without_tone() {
+        let full_name: String =
+            String::from("Maybelline - Labial líquido SuperStay Vinyl Ink - 35: Cheeky");
+        let product_name: String = Maquillalia::get_name_without_tone(&full_name);
+        assert_eq!(
+            product_name,
+            "Maybelline - Labial líquido SuperStay Vinyl Ink"
+        );
+    }
+
+    /// Tests the parsing between the full name in Maquillalia and a custom version with only the final tone name.
+    #[test]
+    fn get_tone_name() {
+        let full_name: String =
+            String::from("Maybelline - Labial líquido SuperStay Vinyl Ink - 35: Cheeky");
+        let tone_name: String = Maquillalia::get_tone_name(&full_name);
+        assert_eq!(tone_name, " 35: Cheeky");
+
+        //TODO: Support for tones with trailing dashes.
+        // let full_name: String = String::from("Maybelline - Labial líquido SuperStay Vinyl Ink - 35: Cheeky - Extra long - dashes - - - - -");
+        // let tone_name: String = Maquillalia::get_tone_name(&full_name);
+        // assert_eq!(tone_name, " 35: Cheeky - Extra long - dashes - - - - -");
+    }
+
     /// Tests a search with a few results.
     #[test]
     fn search_with_results() {
@@ -26,7 +52,7 @@ mod maquillalia {
     /// In this test the petition find >1500 results but we have to stop at MAX_RESULTS.
     #[test]
     fn search_with_specific_num_results() {
-        const MAX_RESULTS: usize = 21;
+        const MAX_RESULTS: usize = 3;
         let conf: Configuration = Configuration::new(0.0, MAX_RESULTS);
         let products = Maquillalia::new(&conf)
             .look_for_products(String::from("Labial"))

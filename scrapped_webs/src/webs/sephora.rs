@@ -173,10 +173,7 @@ pub mod spain {
 
         fn create_product(document: &Html) -> Product {
             let mut product = Product::default();
-            let html = document
-                .select(&scraper::Selector::parse("html").unwrap())
-                .next()
-                .unwrap();
+            let html = document.root_element();
 
             let name = helper::attribute_html_value(&html, "h1>meta", "content").unwrap();
             println!("{name}");
