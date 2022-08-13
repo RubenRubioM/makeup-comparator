@@ -188,7 +188,6 @@ impl<'a> Scrappable for Maquillalia<'a> {
 
     fn create_product(document: &scraper::Html) -> Product {
         let mut product = Product::default();
-        // product.set_tones(Some(vec![]));
         product.set_available(true);
         let html = document.root_element();
 
