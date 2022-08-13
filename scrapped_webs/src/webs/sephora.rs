@@ -255,7 +255,7 @@ pub mod spain {
                     )
                 }
             };
-            Tone::new(tone_name, price_standard, price_sale, true, None)
+            Tone::new(tone_name, price_standard, price_sale, true, None, None)
         }
     }
 }

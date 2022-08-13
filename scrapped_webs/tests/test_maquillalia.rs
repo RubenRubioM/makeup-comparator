@@ -73,4 +73,38 @@ mod maquillalia {
             },
         }
     }
+
+    /// Tests a search for a product with different tones available.
+    #[test]
+    fn search_product_with_tones() {
+        let conf: Configuration = Configuration::new(0.0, 1);
+        let products = Maquillalia::new(&conf)
+            .look_for_products(String::from("Milani - Labial Líquido Amore Mettallics"))
+            .unwrap();
+        assert_eq!(products.len(), 1);
+        assert_eq!(
+            products.first().unwrap().name(),
+            " Labial Líquido Amore Mettallics"
+        );
+        assert_eq!(products.first().unwrap().brand(), "Milani ");
+        assert_eq!(products.first().unwrap().price_standard(), 0.0);
+        assert_eq!(products.first().unwrap().price_sales(), None);
+        assert_eq!(products.first().unwrap().rating(), None);
+        assert_eq!(products.first().unwrap().tones().unwrap().len(), 4);
+    }
+
+    #[test]
+    fn search_product_without_tones() {
+        let conf: Configuration = Configuration::new(0.0, 1);
+        let products = Maquillalia::new(&conf)
+            .look_for_products(String::from("Agrado - Bruma facial solar SPF50+"))
+            .unwrap();
+        assert_eq!(products.len(), 1);
+        assert_eq!(
+            products.first().unwrap().name(),
+            " Bruma facial solar SPF50+"
+        );
+        assert_eq!(products.first().unwrap().brand(), "Agrado ");
+        assert_eq!(products.first().unwrap().tones().is_none(), true);
+    }
 }

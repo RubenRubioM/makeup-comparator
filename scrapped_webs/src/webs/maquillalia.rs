@@ -30,7 +30,7 @@ const PAGINATION_SUFFIX: &str = "page=";
 // Items showing per page used to determine if we reach the last page of products.
 const ITEMS_PER_PAGE: usize = 20;
 // Maximum rating for SephoraSpain.
-const _MAX_RATING: f32 = 5.0;
+const MAX_RATING: f32 = 5.0;
 
 /// Structure that define functionality for SephoraSpain.
 pub struct Maquillalia<'a> {
@@ -188,6 +188,8 @@ impl<'a> Scrappable for Maquillalia<'a> {
 
     fn create_product(document: &scraper::Html) -> Product {
         let mut product = Product::default();
+        // product.set_tones(Some(vec![]));
+        product.set_available(true);
         let html = document.root_element();
 
         let full_name = Maquillalia::get_name_without_tone(
@@ -195,8 +197,8 @@ impl<'a> Scrappable for Maquillalia<'a> {
         );
         // TODO: Remove trailing and beginning white spaces.
         let mut name_and_brand = full_name.trim().split('-');
-        product.set_name(name_and_brand.next().unwrap().to_string());
         product.set_brand(name_and_brand.next().unwrap().to_string());
+        product.set_name(name_and_brand.next().unwrap().to_string());
 
         // If we find the element for different tones we iterate over all the websites and fill the Tone variable.
         let tones_urls_selector = scraper::Selector::parse("ul.familasColores>li").unwrap();
@@ -208,16 +210,70 @@ impl<'a> Scrappable for Maquillalia<'a> {
             println!("{}", url_string);
             let response = reqwest::blocking::get(&url_string).unwrap().text().unwrap();
             let document = scraper::Html::parse_document(&response);
-            product.add_tone(Self::create_tone(&document.root_element()));
+            let mut tone = Self::create_tone(&document.root_element());
+            tone.set_url(Some(url_string));
+            product.add_tone(tone);
+        }
+
+        if product.tones().is_none() {
+            if helper::has_html_selector(&html, "table>tbody>tr>td>div.Price>del") {
+                // It is on sale.
+                product.set_price_standard(helper::parse_price_string(
+                    helper::inner_html_value(&html, "table>tbody>tr>td>div.Price>del").unwrap(),
+                ));
+                product.set_price_sales(Some(helper::parse_price_string(
+                    helper::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong").unwrap(),
+                )));
+            } else {
+                product.set_price_standard(helper::parse_price_string(
+                    helper::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong").unwrap(),
+                ));
+            }
+            product.set_rating(Some(helper::normalized_rating(
+                helper::attribute_html_value(&html, "div.Rating>span.Stars", "data-rating")
+                    .unwrap()
+                    .parse()
+                    .unwrap(),
+                MAX_RATING,
+            )));
         }
         product
     }
 
     fn create_tone(element: &scraper::ElementRef) -> Tone {
-        // Tone name.
-        let _tone_name = Maquillalia::get_name_without_tone(
-            &helper::inner_html_value(element, "h1.Title").unwrap(),
+        let tone_name =
+            Maquillalia::get_tone_name(&helper::inner_html_value(element, "h1.Title").unwrap())
+                .trim()
+                .to_string();
+        let price_standard;
+        let mut price_sales = Option::<f32>::None;
+        if helper::has_html_selector(element, "table>tbody>tr>td>div.Price>del") {
+            // It is on sale.
+            price_standard = helper::parse_price_string(
+                helper::inner_html_value(element, "table>tbody>tr>td>div.Price>del").unwrap(),
+            );
+            price_sales = Some(helper::parse_price_string(
+                helper::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
+            ));
+        } else {
+            price_standard = helper::parse_price_string(
+                helper::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
+            );
+        }
+        let rating = helper::normalized_rating(
+            helper::attribute_html_value(element, "div.Rating>span.Stars", "data-rating")
+                .unwrap()
+                .parse()
+                .unwrap(),
+            MAX_RATING,
         );
-        Tone::default()
+        Tone::new(
+            tone_name,
+            price_standard,
+            price_sales,
+            true,
+            None,
+            Some(rating),
+        )
     }
 }
