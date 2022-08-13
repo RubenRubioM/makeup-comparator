@@ -15,6 +15,8 @@ pub struct Tone {
     available: bool,
     /// Possible url if it is not directly in the same webpage.
     url: Option<String>,
+    /// Possible rating.
+    rating: Option<f32>,
 }
 
 impl Tone {
@@ -24,6 +26,7 @@ impl Tone {
         price_sales: Option<f32>,
         available: bool,
         url: Option<String>,
+        rating: Option<f32>,
     ) -> Self {
         Self {
             name,
@@ -31,6 +34,7 @@ impl Tone {
             price_sales,
             available,
             url,
+            rating,
         }
     }
 
@@ -54,6 +58,10 @@ impl Tone {
     pub fn url(&self) -> Option<String> {
         self.url.clone()
     }
+    /// Returns the rating.
+    pub fn rating(&self) -> Option<f32> {
+        self.rating
+    }
     /// Sets the name of the product.
     pub fn set_name(&mut self, name: String) {
         self.name = name;
@@ -73,6 +81,10 @@ impl Tone {
     /// Sets the URL.
     pub fn set_url(&mut self, url: Option<String>) {
         self.url = url;
+    }
+    /// Sets the rating.
+    pub fn set_rating(&mut self, rating: Option<f32>) {
+        self.rating = rating;
     }
 }
 
@@ -220,6 +232,13 @@ impl Product {
     /// Sets the availability.
     pub fn set_available(&mut self, set_available: bool) {
         self.available = set_available;
+    }
+    /// Adds a new Tone.
+    pub fn add_tone(&mut self, tone: Tone) {
+        if self.tones.is_none() {
+            self.tones = Some(Vec::<Tone>::new());
+        }
+        self.tones.as_mut().unwrap().push(tone);
     }
 }
 

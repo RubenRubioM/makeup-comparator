@@ -139,6 +139,23 @@ pub fn attribute_html_value(
     }
 }
 
+/// Returns the value for an attribute inside the selector provided in the element
+/// # Arguments
+/// element - The HTML element
+/// selector - The css selector
+/// attribute - The html attribute
+///
+/// # Returns
+/// String - if found
+/// HtmlSearchError::ElementNotFound - if not found the selector
+/// HtmlSearchError::AttributeNotFound - if not found the attribute
+pub fn has_html_selector(element: &ElementRef, selector: &str) -> bool {
+    element
+        .select(&scraper::Selector::parse(selector).unwrap())
+        .next()
+        .is_some()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
