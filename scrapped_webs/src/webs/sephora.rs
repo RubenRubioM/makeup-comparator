@@ -211,7 +211,8 @@ pub mod spain {
             product.set_tones(if tones.is_empty() { None } else { Some(tones) });
 
             let mut rating =
-                helper::inner_html_value(&html, "div.bv_numReviews_text>span").unwrap();
+                helper::attribute_html_value(&html, "div.bv_numReviews_text>span>meta", "content")
+                    .unwrap();
             rating = if rating.is_empty() {
                 "0.0".to_string()
             } else {

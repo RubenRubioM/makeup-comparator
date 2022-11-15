@@ -60,7 +60,7 @@ mod sephora_spain {
         let products = sephora_spain
             .look_for_products(String::from("RARE BEAUTY Kind Words"))
             .unwrap();
-        assert_eq!(products.len(), 2);
+        assert_eq!(products.len(), 3);
     }
 
     /// Tests if the SephoraSpain::look_for_products(name) works when the /todos-los-productos/ path.
