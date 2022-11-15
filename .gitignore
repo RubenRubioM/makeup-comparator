@@ -13,3 +13,6 @@
 
 # My exceptions
 .vscode
+
+# Coverage
+*.profraw
