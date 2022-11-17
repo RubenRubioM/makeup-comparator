@@ -183,7 +183,7 @@ pub mod spain {
             product.set_brand(brand);
 
             let mut tones: Vec<Tone> = vec![];
-            if let Some(variation_list) = html
+            if let Some(variations_list) = html
                 .select(
                     &scraper::Selector::parse(
                         r#"div#colorguide-colors>div.colorguide-variations-list"#,

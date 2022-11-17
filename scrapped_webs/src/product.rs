@@ -252,7 +252,7 @@ impl Display for Product {
             out.push_str(format!("\nPrice on sale: {}", price_sales).as_str())
         }
         if let Some(rating) = self.rating() {
-            out.push_str(format!("\nRating: {}", rating).as_str()),
+            out.push_str(format!("\nRating: {}", rating).as_str())
         }
         out.push_str(format!("\nSimilarity: {}", self.similarity()).as_str());
         out.push_str(format!("\nAvailable: {}", self.available()).as_str());
