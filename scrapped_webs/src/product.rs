@@ -93,10 +93,9 @@ impl Display for Tone {
         let mut out: String = String::new();
         out.push_str(format!("Name: {}", self.name()).as_str());
         out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
-        match self.price_sales {
-            Some(price_sales) => out.push_str(format!("\nPrice on sale: {}", price_sales).as_str()),
-            None => (),
-        };
+        if let Some(price_sales) = self.price_sales {
+            out.push_str(format!("\nPrice on sale: {}", price_sales).as_str())
+        }
 
         writeln!(f, "{}", out)
     }
@@ -249,19 +248,16 @@ impl Display for Product {
         out.push_str(format!("\nBrand: {}", self.brand()).as_str());
         out.push_str(format!("\nLink: {}", self.link()).as_str());
         out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
-        match self.price_sales() {
-            Some(price_sales) => out.push_str(format!("\nPrice on sale: {}", price_sales).as_str()),
-            None => (),
+        if let Some(price_sales) = self.price_sales() {
+            out.push_str(format!("\nPrice on sale: {}", price_sales).as_str())
         }
-        match self.rating() {
-            Some(rating) => out.push_str(format!("\nRating: {}", rating).as_str()),
-            None => (),
+        if let Some(rating) = self.rating() {
+            out.push_str(format!("\nRating: {}", rating).as_str())
         }
         out.push_str(format!("\nSimilarity: {}", self.similarity()).as_str());
         out.push_str(format!("\nAvailable: {}", self.available()).as_str());
-        match self.tones() {
-            Some(tones) => out.push_str(format!("\nTones: {:#?}", tones).as_str()),
-            None => (),
+        if let Some(tones) = self.tones() {
+            out.push_str(format!("\nTones: {:#?}", tones).as_str())
         }
 
         writeln!(f, "{}", out)

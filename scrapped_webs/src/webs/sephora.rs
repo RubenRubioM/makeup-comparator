@@ -183,7 +183,7 @@ pub mod spain {
             product.set_brand(brand);
 
             let mut tones: Vec<Tone> = vec![];
-            match html
+            if let Some(variations_list) = html
                 .select(
                     &scraper::Selector::parse(
                         r#"div#colorguide-colors>div.colorguide-variations-list"#,
@@ -192,21 +192,17 @@ pub mod spain {
                 )
                 .next()
             {
-                // If Some, we have a tones list of elements.
-                Some(variations_list) => {
-                    // Collect the list of divs for all the tones containing its own data each.
-                    let tones_list: Vec<ElementRef> = variations_list
-                        .select(&scraper::Selector::parse("div.variation-button-line").unwrap())
-                        .collect();
+                // If Some, we have a list of tones.
+                // Collect the list of divs for all the tones containing its own data each.
+                let tones_list: Vec<ElementRef> = variations_list
+                    .select(&scraper::Selector::parse("div.variation-button-line").unwrap())
+                    .collect();
 
-                    // Iterate over all the available tones.
-                    // TODO: Check if the tone is sold out and don't add it or add it with a boolean indicating it.
-                    for tone_element in tones_list.iter() {
-                        tones.push(Self::create_tone(tone_element));
-                    }
+                // Iterate over all the available tones.
+                // TODO: Check if the tone is sold out and don't add it or add it with a boolean indicating it.
+                for tone_element in tones_list.iter() {
+                    tones.push(Self::create_tone(tone_element));
                 }
-                // If None, this product does not have any tones.
-                None => (),
             }
             product.set_tones(if tones.is_empty() { None } else { Some(tones) });
 
