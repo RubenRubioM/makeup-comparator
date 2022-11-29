@@ -10,9 +10,7 @@ cargo test --workspace -- --include-ignored
 
 ## Run test coverage locally
 ```bash
-$ CARGO_INCREMENTAL=0 RUSTFLAGS='-Cinstrument-coverage' LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw' cargo test --workspace -- --include-ignored
-$ grcov . --binary-path ./target/debug/deps/ -s . -t html --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/
-$ $ grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/lcov.info
+./test_coverage.sh
 ```
 
 ## TODO
