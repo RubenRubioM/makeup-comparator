@@ -95,19 +95,25 @@ pub mod spain {
                 for url in products_urls {
                     // Make a copy to be able to send via threads.
                     let name_copy = name.clone();
-                    handles.push(thread::spawn(move || {
-                        println!("GET: {url}");
-                        let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
-                        let document = scraper::Html::parse_document(&response);
-                        let mut product: Product = SephoraSpain::create_product(&document);
-                        product.set_link(url);
-                        let full_name = format!("{} {}", product.brand(), product.name());
-                        product.set_similarity(helper::compare_similarity(
-                            full_name.as_str(),
-                            name_copy.as_str(),
-                        ));
-                        product
-                    }));
+                    handles.push(
+                        thread::Builder::new()
+                            .name(url.clone())
+                            .spawn(move || {
+                                println!("GET: {url}");
+                                let response =
+                                    reqwest::blocking::get(&url).unwrap().text().unwrap();
+                                let document = scraper::Html::parse_document(&response);
+                                let mut product: Product = SephoraSpain::create_product(&document);
+                                product.set_link(url);
+                                let full_name = format!("{} {}", product.brand(), product.name());
+                                product.set_similarity(helper::compare_similarity(
+                                    full_name.as_str(),
+                                    name_copy.as_str(),
+                                ));
+                                product
+                            })
+                            .unwrap(),
+                    );
                 }
                 for handle in handles {
                     products.push(handle.join().unwrap());
