@@ -158,6 +158,8 @@ pub fn has_html_selector(element: &ElementRef, selector: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use scraper::Html;
+
     use super::*;
 
     #[test]
@@ -169,14 +171,14 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     /// Discount method return None if there is not price_sales.
+    #[should_panic]
     fn test_discount_without_price_sales() {
         let (_discount_value, _percentage_discount) = discount(50.0, None).unwrap();
     }
 
-    #[test]
     /// Tests the parsing between money string and return the value in floating pointer.
+    #[test]
     fn test_parse_price_string() {
         assert_eq!(38.95, parse_price_string("38,95 €".to_string()));
         assert_eq!(38.95, parse_price_string("38.95 $".to_string()));
@@ -185,11 +187,90 @@ mod tests {
         assert_eq!(38.3, parse_price_string("38,3€".to_string()));
     }
 
-    #[test]
     /// Tests if the rating is properly normalized between 0-5.
+    #[test]
     fn test_normalized_rating() {
         assert_eq!(2.0, normalized_rating(20.0, 100.0));
         assert_eq!(10.0, normalized_rating(5.0, 5.0));
         assert_eq!(1.0, normalized_rating(1.0, 10.0));
+    }
+
+    /// Tests if the inner html value is properly returned.
+    #[test]
+    fn test_inner_html_value() {
+        let html = r#"
+            <!DOCTYPE html>
+            <meta charset="utf-8">
+            <title>Hello, world!</title>
+            <h1 class="foo">Hello, <i>world!</i></h1>
+        "#;
+
+        let document = Html::parse_document(html);
+        let element = document.root_element();
+        let ok_result = inner_html_value(&element, "h1");
+        assert!(Result::is_ok(&ok_result));
+        assert_eq!(ok_result.unwrap(), "Hello, <i>world!</i>");
+
+        let element_not_found_result = inner_html_value(&element, "h2");
+        assert!(Result::is_err(&element_not_found_result));
+        assert_eq!(
+            element_not_found_result.unwrap_err(),
+            HtmlSearchError::ElementNotFound("h2".to_string())
+        );
+    }
+
+    /// Tests if the attribute html value is properly returned.
+    #[test]
+    fn test_attribute_html_value() {
+        let html = r#"
+            <!DOCTYPE html>
+            <meta charset="utf-8">
+            <title>Hello, world!</title>
+            <h1 class="foo">Hello, <i>world!</i></h1>
+        "#;
+
+        let document = Html::parse_document(html);
+        let element = document.root_element();
+        let ok_result = attribute_html_value(&element, "h1", "class");
+        assert!(Result::is_ok(&ok_result));
+        assert_eq!(ok_result.unwrap(), "foo");
+
+        let element_not_found_result = attribute_html_value(&element, "h2", "class");
+        assert!(Result::is_err(&element_not_found_result));
+        assert_eq!(
+            element_not_found_result.clone().unwrap_err(),
+            HtmlSearchError::ElementNotFound("h2".to_string())
+        );
+        println!(
+            "Testing Debug trait for HtmlSearchError::ElementNotFound: {:?}",
+            element_not_found_result.unwrap_err()
+        );
+
+        let attribute_not_found_result = attribute_html_value(&element, "h1", "id");
+        assert!(Result::is_err(&attribute_not_found_result));
+        assert_eq!(
+            attribute_not_found_result.clone().unwrap_err(),
+            HtmlSearchError::AttributeNotFound("id".to_string())
+        );
+        println!(
+            "Testing Debug trait for HtmlSearchError::AttributeNotFound: {:?}",
+            attribute_not_found_result.unwrap_err()
+        );
+    }
+
+    /// Tests if the selector is properly found.
+    #[test]
+    fn test_has_html_selector() {
+        let html = r#"
+            <!DOCTYPE html>
+            <meta charset="utf-8">
+            <title>Hello, world!</title>
+            <h1 class="foo">Hello, <i>world!</i></h1>
+        "#;
+
+        let document = Html::parse_document(html);
+        let element = document.root_element();
+        assert!(has_html_selector(&element, "h1"));
+        assert!(!has_html_selector(&element, "h2"));
     }
 }

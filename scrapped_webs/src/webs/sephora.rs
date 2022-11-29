@@ -212,9 +212,9 @@ pub mod spain {
             }
             product.set_tones(if tones.is_empty() { None } else { Some(tones) });
 
+            // FIXME: It is getting the number of reviews instead of the rating.
             let mut rating =
-                helper::attribute_html_value(&html, "div.bv_numReviews_text>span>meta", "content")
-                    .unwrap();
+                helper::inner_html_value(&html, "div.bv_numReviews_text>span>meta").unwrap();
             rating = if rating.is_empty() {
                 "0.0".to_string()
             } else {

@@ -61,3 +61,32 @@ pub trait Scrappable {
     /// Tone - The individual tone.
     fn create_tone(element: &ElementRef) -> Tone;
 }
+
+mod test {
+    use super::SearchError;
+
+    /// Test the search error display implementation.
+    #[test]
+    fn test_search_error_display() {
+        assert_eq!(
+            SearchError::Timeout.to_string(),
+            "timeout when doing the petition"
+        );
+        assert_eq!(
+            SearchError::NotEnoughSimilarity.to_string(),
+            "not found any result above the minimum similarity rate"
+        );
+        assert_eq!(SearchError::NotFound.to_string(), "not found any result");
+    }
+
+    /// Test the search error debug implementation.
+    #[test]
+    fn test_search_error_debug() {
+        assert_eq!(format!("{:?}", SearchError::Timeout), "Timeout");
+        assert_eq!(
+            format!("{:?}", SearchError::NotEnoughSimilarity),
+            "NotEnoughSimilarity"
+        );
+        assert_eq!(format!("{:?}", SearchError::NotFound), "NotFound");
+    }
+}

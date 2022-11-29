@@ -1,4 +1,14 @@
-use clap::Parser;
+use clap::{clap_derive::ArgEnum, Parser};
+
+#[derive(ArgEnum, Clone, Debug)]
+pub enum Website {
+    /// All the websites
+    All,
+    /// www.sephora.es
+    SephoraSpain,
+    /// www.maquillalia.com
+    Maquillalia,
+}
 
 /// A simple command line finder and comparator for makeups websites
 #[derive(Parser, Debug)]
@@ -13,4 +23,7 @@ pub struct Args {
     /// Minimum similarity threshold
     #[clap(long, value_parser, default_value_t = 0.0)]
     pub min_similarity: f32,
+    /// Websites to search
+    #[clap(long, value_parser)]
+    pub websites: Vec<Website>,
 }

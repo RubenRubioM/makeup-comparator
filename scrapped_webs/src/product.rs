@@ -94,7 +94,7 @@ impl Display for Tone {
         out.push_str(format!("Name: {}", self.name()).as_str());
         out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
         if let Some(price_sales) = self.price_sales {
-            out.push_str(format!("\nPrice on sale: {}", price_sales).as_str())
+            out.push_str(format!("\nPrice on sale: {}", price_sales).as_str());
         }
 
         writeln!(f, "{}", out)
@@ -249,15 +249,15 @@ impl Display for Product {
         out.push_str(format!("\nLink: {}", self.link()).as_str());
         out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
         if let Some(price_sales) = self.price_sales() {
-            out.push_str(format!("\nPrice on sale: {}", price_sales).as_str())
+            out.push_str(format!("\nPrice on sale: {}", price_sales).as_str());
         }
         if let Some(rating) = self.rating() {
-            out.push_str(format!("\nRating: {}", rating).as_str())
+            out.push_str(format!("\nRating: {}", rating).as_str());
         }
         out.push_str(format!("\nSimilarity: {}", self.similarity()).as_str());
         out.push_str(format!("\nAvailable: {}", self.available()).as_str());
         if let Some(tones) = self.tones() {
-            out.push_str(format!("\nTones: {:#?}", tones).as_str())
+            out.push_str(format!("\nTones: {:#?}", tones).as_str());
         }
 
         writeln!(f, "{}", out)

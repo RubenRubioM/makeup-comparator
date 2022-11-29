@@ -3,6 +3,13 @@
 
 A CLI project made in Rust to compare different properties for makeup products from different websites.
 
+## How to use via CLI
+```bash
+cargo run -- --help # To get information.
+# Standard call
+cargo run -- --product "Product name" --max-results=3  --min-similarity=0.20 --websites=sephora-spain --websites=maquillalia
+```
+
 ## Run test locally
 ```bash
 cargo test --workspace -- --include-ignored
