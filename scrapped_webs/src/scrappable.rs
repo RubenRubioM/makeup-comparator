@@ -63,7 +63,8 @@ pub trait Scrappable {
 }
 
 mod test {
-    use super::SearchError;
+    #[allow(unused_imports)]
+    use super::*;
 
     /// Test the search error display implementation.
     #[test]
