@@ -14,26 +14,26 @@ use parameters::Args;
 fn main() {
     let args = Args::parse();
     let conf: Configuration = Configuration::new(args.min_similarity, args.max_results);
+    let webs = args.websites;
     let mut products_by_shop = HashMap::<&str, Vec<Product>>::new();
 
-    match SephoraSpain::new(&conf).look_for_products(args.product.clone()) {
-        Ok(products) => {
-            products_by_shop.insert("SephoraSpain", products);
+    for web in webs {
+        match web {
+            parameters::Website::SephoraSpain => {
+                let sephora_spain = SephoraSpain::new(&conf);
+                let products = sephora_spain
+                    .look_for_products(args.product.clone())
+                    .unwrap();
+                products_by_shop.insert("SephoraSpain", products);
+            }
+            parameters::Website::Maquillalia => {
+                let maquillalia = Maquillalia::new(&conf);
+                let products = maquillalia.look_for_products(args.product.clone()).unwrap();
+                products_by_shop.insert("Maquillalia", products);
+            }
+            parameters::Website::All => todo!(),
         }
-        Err(search_error) => {
-            eprintln!("{search_error}");
-        }
-    };
-
-    match Maquillalia::new(&conf).look_for_products(args.product) {
-        Ok(products) => {
-            products_by_shop.insert("Maquillalia", products);
-        }
-        Err(search_error) => {
-            eprintln!("{search_error}");
-        }
-    };
-
+    }
     println!("{:#?}", products_by_shop);
     println!("Makeup comparator!");
 }
