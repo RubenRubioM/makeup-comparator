@@ -141,6 +141,7 @@ pub mod spain {
             let mut num_results = 0;
 
             for item in items {
+                any_results = true;
                 let brand = helper::inner_html_value(&item, "span.product-brand").unwrap();
                 let title = helper::attribute_html_value(&item, "h3", "title").unwrap();
                 let url = helper::attribute_html_value(&item, "a", "href").unwrap();
@@ -151,7 +152,6 @@ pub mod spain {
 
                 if similarity >= self.config.min_similarity() {
                     urls.push(url.to_string());
-                    any_results = true;
                     num_results += 1;
                     if num_results == self.config.max_results() {
                         break;
@@ -235,30 +235,34 @@ pub mod spain {
                 .trim()
                 .to_string();
 
-            // Tone price standard and price sale
-            // NOTE: It has different layout if the product its on sale or not
-            let (price_standard, price_sale) = match element
-                .select(&scraper::Selector::parse(".price-sales-standard>span").unwrap())
-                .next()
-            {
-                // If Some, it is not on sale.
-                Some(price_standard) => (
-                    helper::parse_price_string(price_standard.inner_html()),
-                    None,
-                ),
-                // If None, it is on sale.
-                None => {
-                    let price_standard =
-                        helper::inner_html_value(element, "span.price-standard").unwrap();
-                    let price_sale =
-                        helper::inner_html_value(element, "span.price-sales>span").unwrap();
-                    (
-                        helper::parse_price_string(price_standard),
-                        Some(helper::parse_price_string(price_sale)),
-                    )
-                }
+            // price_standard could be inside span.price-standard or span.price-sales-standard
+            let price_standard: f32 = if helper::has_html_selector(element, "span.price-standard") {
+                helper::parse_price_string(
+                    helper::inner_html_value(element, "span.price-standard").unwrap(),
+                )
+            } else {
+                helper::parse_price_string(
+                    helper::inner_html_value(element, "span.price-sales-standard").unwrap(),
+                )
             };
-            Tone::new(tone_name, price_standard, price_sale, true, None, None)
+
+            // price_standard could also be inside span.price-sales this is why later we check if it is greater than price_sale
+            let price_sale: f32 = helper::parse_price_string(
+                helper::inner_html_value(element, "span.price-sales").unwrap(),
+            );
+
+            Tone::new(
+                tone_name,
+                price_standard,
+                if price_standard > price_sale {
+                    Some(price_sale)
+                } else {
+                    None
+                },
+                true,
+                None,
+                None,
+            )
         }
     }
 }

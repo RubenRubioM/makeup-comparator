@@ -55,12 +55,12 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn search_has_results() {
-        let conf: Configuration = Configuration::new(0.0, usize::MAX);
+        let conf: Configuration = Configuration::new(0.0, 2);
         let sephora_spain = SephoraSpain::new(&conf);
         let products = sephora_spain
             .look_for_products(String::from("RARE BEAUTY Kind Words"))
             .unwrap();
-        assert_eq!(products.len(), 3);
+        assert_eq!(products.len(), 2);
     }
 
     /// Tests if the SephoraSpain::look_for_products(name) works when the /todos-los-productos/ path.
@@ -80,7 +80,7 @@ mod sephora_spain {
     #[test]
     #[ignore]
     fn search_has_no_results() {
-        let conf: Configuration = Configuration::new(0.0, usize::MAX);
+        let conf: Configuration = Configuration::new(0.95, usize::MAX);
         let sephora_spain = SephoraSpain::new(&conf);
 
         match sephora_spain.look_for_products(String::from("Taemin")) {
@@ -89,6 +89,14 @@ mod sephora_spain {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => panic!("{}", search_error),
                 SearchError::NotFound => assert!(true),
+            },
+        }
+        match sephora_spain.look_for_products(String::from("iluminador facial")) {
+            Ok(_) => panic!("We should not find any results"),
+            Err(search_error) => match search_error {
+                SearchError::Timeout => panic!("{}", search_error),
+                SearchError::NotEnoughSimilarity => assert!(true),
+                SearchError::NotFound => panic!("{}", search_error),
             },
         }
     }

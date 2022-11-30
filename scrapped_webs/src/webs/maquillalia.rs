@@ -159,6 +159,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
             let element_name = helper::inner_html_value(&item, "h3.Title>a").unwrap();
             let full_name = Maquillalia::get_name_without_tone(&element_name);
             let url = helper::attribute_html_value(&item, "h3.Title>a", "href").unwrap();
+            any_results = true;
 
             let similarity = helper::compare_similarity(name, &full_name);
             if similarity >= self.config.min_similarity() {
@@ -169,7 +170,6 @@ impl<'a> Scrappable for Maquillalia<'a> {
 
                 individual_products.push(full_name);
                 urls.push(url.to_string());
-                any_results = true;
             } else {
                 println!(
                     "{}",
