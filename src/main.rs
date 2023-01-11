@@ -8,32 +8,14 @@ use scrapped_webs::webs::maquillalia::Maquillalia;
 use scrapped_webs::webs::sephora::spain::SephoraSpain;
 
 mod parameters;
+mod parameters_processor;
 use clap::Parser;
 use parameters::Args;
 
-fn main() {
-    let args = Args::parse();
-    let conf: Configuration = Configuration::new(args.min_similarity, args.max_results);
-    let webs = args.websites;
-    let mut products_by_shop = HashMap::<&str, Vec<Product>>::new();
+use clap::Arg;
 
-    for web in webs {
-        match web {
-            parameters::Website::SephoraSpain => {
-                let sephora_spain = SephoraSpain::new(&conf);
-                let products = sephora_spain
-                    .look_for_products(args.product.clone())
-                    .unwrap();
-                products_by_shop.insert("SephoraSpain", products);
-            }
-            parameters::Website::Maquillalia => {
-                let maquillalia = Maquillalia::new(&conf);
-                let products = maquillalia.look_for_products(args.product.clone()).unwrap();
-                products_by_shop.insert("Maquillalia", products);
-            }
-            parameters::Website::All => todo!(),
-        }
-    }
+fn main() {
+    let products_by_shop = parameters_processor::get_results(Args::parse());
     println!("{:#?}", products_by_shop);
     println!("Makeup comparator!");
 }

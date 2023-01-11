@@ -1,6 +1,6 @@
 use clap::{clap_derive::ArgEnum, Parser};
 
-#[derive(ArgEnum, Clone, Debug)]
+#[derive(ArgEnum, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Website {
     /// All the websites
     All,
