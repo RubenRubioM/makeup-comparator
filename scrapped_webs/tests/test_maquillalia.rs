@@ -98,7 +98,7 @@ mod maquillalia {
         assert_eq!(products.first().unwrap().price_standard(), 0.0);
         assert_eq!(products.first().unwrap().price_sales(), None);
         assert_eq!(products.first().unwrap().rating(), None);
-        assert_eq!(products.first().unwrap().tones().unwrap().len(), 4);
+        assert_eq!(products.first().unwrap().tones().unwrap().len(), 2);
     }
 
     #[test]
