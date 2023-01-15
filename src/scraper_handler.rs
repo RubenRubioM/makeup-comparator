@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn test_debug_trait() {
         let args = Args {
-            product: "pintalabios".to_string(),
+            product: String::from("labial"),
             max_results: 15,
             min_similarity: 0.0,
             websites: vec![parameters::Website::SephoraSpain],
@@ -82,7 +82,7 @@ mod tests {
         let scraper_handler = ScraperHandler::new(parameters_processor);
         assert_eq!(
             format!("{:?}", scraper_handler),
-            "ScraperHandler { parameters_processor: ParametersProcessor { configuration: Configuration { min_similarity: 0.0, max_results: 15 }, websites: [SephoraSpain], product: \"pintalabios\" } }"
+            "ScraperHandler { parameters_processor: ParametersProcessor { configuration: Configuration { min_similarity: 0.0, max_results: 15 }, websites: [SephoraSpain], product: \"labial\" } }"
         );
     }
 
@@ -91,7 +91,7 @@ mod tests {
     #[ignore]
     fn get_results() {
         let args = Args {
-            product: "pintalabios".to_string(),
+            product: String::from("labial"),
             max_results: 15,
             min_similarity: 0.0,
             websites: vec![
@@ -112,7 +112,7 @@ mod tests {
     #[ignore]
     fn get_results_all_websites() {
         let args = Args {
-            product: "pintalabios".to_string(),
+            product: String::from("labial"),
             max_results: 50,
             min_similarity: 0.0,
             websites: vec![parameters::Website::All],

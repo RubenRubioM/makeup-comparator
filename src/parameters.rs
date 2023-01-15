@@ -27,3 +27,36 @@ pub struct Args {
     #[clap(long, value_parser)]
     pub websites: Vec<Website>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn debug_trait() {
+        let args = Args {
+            product: String::from("Pintalabios"),
+            max_results: 15,
+            min_similarity: 0.0,
+            websites: vec![Website::All],
+        };
+        assert_eq!(
+            format!("{:?}", args),
+            "Args { product: \"Pintalabios\", max_results: 15, min_similarity: 0.0, websites: [All] }"
+        );
+    }
+
+    #[test]
+    fn initialize_args() {
+        let args = Args {
+            product: String::from("Pintalabios"),
+            max_results: 15,
+            min_similarity: 0.0,
+            websites: vec![Website::All],
+        };
+        assert_eq!(args.product, "Pintalabios");
+        assert_eq!(args.max_results, 15);
+        assert_eq!(args.min_similarity, 0.0);
+        assert_eq!(args.websites, vec![Website::All]);
+    }
+}

@@ -16,10 +16,22 @@ cargo test --workspace -- --include-ignored
 ```
 
 ## Run test coverage locally
+The objective is to keep code coverage for files under `src/` above 95%.
 ```bash
 ./test_coverage.sh
 ```
 
 ## TODO
+
+### Tier 1
+- Format the output to show in terminal
+- Create a server to receive petitions and translate them to command parameters. This way we could use the same logic to CLI and a future webpage.
+- Add "on discount" parameter to retrieve products only that are on sale.
 - Add a boolean in case the tone in a product exist but it is sold out.
+
+### Tier 2
+- There are intermittent bugs when searching some products.
+- Option to save the results in a json/csv/yaml.
+
+### Tier 3
 - In SephoraSpain we only get the first 27 items (3 items * 9 rows). The search page has infinite scroll. Find a way to load all the results.

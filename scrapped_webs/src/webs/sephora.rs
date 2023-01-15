@@ -213,17 +213,21 @@ pub mod spain {
             product.set_tones(if tones.is_empty() { None } else { Some(tones) });
 
             // FIXME: It is getting the number of reviews instead of the rating.
-            let mut rating =
-                helper::inner_html_value(&html, "div.bv_numReviews_text>span>meta").unwrap();
-            rating = if rating.is_empty() {
-                "0.0".to_string()
+            if helper::has_html_selector(&html, "div.bv_numReviews_text>span>meta") {
+                let mut rating =
+                    helper::inner_html_value(&html, "div.bv_numReviews_text>span>meta").unwrap();
+                rating = if rating.is_empty() {
+                    "0.0".to_string()
+                } else {
+                    rating
+                };
+                product.set_rating(Some(helper::normalized_rating(
+                    rating.parse::<f32>().unwrap(),
+                    MAX_RATING,
+                )));
             } else {
-                rating
-            };
-            product.set_rating(Some(helper::normalized_rating(
-                rating.parse::<f32>().unwrap(),
-                MAX_RATING,
-            )));
+                product.set_rating(None);
+            }
 
             product
         }
