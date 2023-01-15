@@ -1,39 +1,27 @@
 #![allow(unused_imports)]
 use std::collections::HashMap;
 
+mod parameters;
+mod parameters_processor;
+mod scraper_handler;
+
+use parameters_processor::ParametersProcessor;
+use scraper_handler::ScraperHandler;
 use scrapped_webs::configuration::Configuration;
 use scrapped_webs::product::Product;
 use scrapped_webs::scrappable::Scrappable;
 use scrapped_webs::webs::maquillalia::Maquillalia;
 use scrapped_webs::webs::sephora::spain::SephoraSpain;
 
-mod parameters;
 use clap::Parser;
 use parameters::Args;
 
-fn main() {
-    let args = Args::parse();
-    let conf: Configuration = Configuration::new(args.min_similarity, args.max_results);
-    let webs = args.websites;
-    let mut products_by_shop = HashMap::<&str, Vec<Product>>::new();
+use clap::Arg;
 
-    for web in webs {
-        match web {
-            parameters::Website::SephoraSpain => {
-                let sephora_spain = SephoraSpain::new(&conf);
-                let products = sephora_spain
-                    .look_for_products(args.product.clone())
-                    .unwrap();
-                products_by_shop.insert("SephoraSpain", products);
-            }
-            parameters::Website::Maquillalia => {
-                let maquillalia = Maquillalia::new(&conf);
-                let products = maquillalia.look_for_products(args.product.clone()).unwrap();
-                products_by_shop.insert("Maquillalia", products);
-            }
-            parameters::Website::All => todo!(),
-        }
-    }
+fn main() {
+    let parameters_processor = ParametersProcessor::new(Args::parse());
+    let scraper_handler = ScraperHandler::new(parameters_processor);
+    let products_by_shop = scraper_handler.get_results();
     println!("{:#?}", products_by_shop);
     println!("Makeup comparator!");
 }
