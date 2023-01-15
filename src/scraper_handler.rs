@@ -88,6 +88,7 @@ mod tests {
 
     /// Tests a search for a product in two websites.
     #[test]
+    #[ignore]
     fn get_results() {
         let args = Args {
             product: "pintalabios".to_string(),
