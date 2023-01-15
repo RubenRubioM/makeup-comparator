@@ -1,6 +1,11 @@
 //! Module for common data that can be modified.
 
+/// The maximum number of results to retrieve.
+/// Used for avoid to retrieve too many results.
+pub const MAX_RESULTS: usize = 200;
+
 /// Global configuration for the program.
+#[derive(Debug, Clone)]
 pub struct Configuration {
     /// The minimum similarity for searching.
     min_similarity: f32,

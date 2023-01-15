@@ -5,68 +5,181 @@ use std::collections::HashMap;
 use crate::parameters::{self, Args};
 use clap::Parser;
 use scrapped_webs::{
-    configuration::Configuration,
+    configuration::{self, Configuration},
     product::Product,
     scrappable::Scrappable,
     webs::{maquillalia::Maquillalia, sephora::spain::SephoraSpain},
 };
 
-pub fn get_results(args: Args) -> HashMap<parameters::Website, Vec<Product>> {
-    let conf: Configuration = Configuration::new(args.min_similarity, args.max_results);
-    let mut products_by_shop = HashMap::<parameters::Website, Vec<Product>>::new();
-    let webs = args.websites;
+/// Struct to store the parameters set by the user
+#[derive(Debug)]
+pub struct ParametersProcessor {
+    configuration: Configuration,
+    websites: Vec<parameters::Website>,
+    product: String,
+}
 
-    for web in webs {
-        match web {
-            parameters::Website::SephoraSpain => {
-                let sephora_spain = SephoraSpain::new(&conf);
-                let products = sephora_spain
-                    .look_for_products(args.product.clone())
-                    .unwrap();
-                products_by_shop.insert(parameters::Website::SephoraSpain, products);
-            }
-            parameters::Website::Maquillalia => {
-                let maquillalia = Maquillalia::new(&conf);
-                let products = maquillalia.look_for_products(args.product.clone()).unwrap();
-                products_by_shop.insert(parameters::Website::Maquillalia, products);
-            }
-            parameters::Website::All => todo!(),
+impl ParametersProcessor {
+    /// Creates a new ParametersProcessor.
+    /// # Arguments
+    /// * `args` - The arguments sent by the user.
+    /// # Returns
+    /// A new ParametersProcessor.
+    pub fn new(args: Args) -> Self {
+        let mut min_similarity = args.min_similarity;
+        if min_similarity > 1.0 {
+            min_similarity = 1.0;
+        }
+        let mut max_results = args.max_results;
+        if max_results > configuration::MAX_RESULTS {
+            max_results = configuration::MAX_RESULTS;
+        }
+        let conf: Configuration = Configuration::new(min_similarity, max_results);
+        Self {
+            configuration: conf,
+            websites: args.websites,
+            product: args.product,
         }
     }
-    products_by_shop
+
+    /// Returns the configuration for the search.
+    pub fn configuration(&self) -> &Configuration {
+        &self.configuration
+    }
+
+    /// Returns the product to search.
+    pub fn product(&self) -> &String {
+        &self.product
+    }
+
+    /// Returns the websites to search.
+    pub fn websites(&self) -> &Vec<parameters::Website> {
+        &self.websites
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// Tests a search for a product in two websites.
-    #[test]
-    fn test_get_results() {
+    /// Setups the test.
+    fn tear_up(
+        product: String,
+        max_results: usize,
+        min_similarity: f32,
+        websites: Vec<parameters::Website>,
+    ) -> ParametersProcessor {
         let args = Args {
-            product: "pintalabios".to_string(),
-            max_results: 50,
-            min_similarity: 0.0,
-            websites: vec![
-                parameters::Website::SephoraSpain,
-                parameters::Website::Maquillalia,
-            ],
+            product,
+            max_results,
+            min_similarity,
+            websites,
         };
-        let products_by_shop = get_results(args);
-        assert_eq!(products_by_shop.len(), 2);
+        ParametersProcessor::new(args)
     }
 
-    /// Tests a search for a product in all websites.
-    /// TODO: Implement the Website::All
+    /// Tests the new method with a happy path.
     #[test]
-    #[should_panic]
-    fn test_get_results_all_websites() {
-        let args = Args {
-            product: "pintalabios".to_string(),
-            max_results: 50,
-            min_similarity: 0.0,
-            websites: vec![parameters::Website::All],
-        };
-        get_results(args);
+    fn new_happy_path() {
+        let parameters_processor = tear_up(
+            String::from("Pintalabios"),
+            15,
+            0.0,
+            vec![parameters::Website::SephoraSpain],
+        );
+        assert_eq!(parameters_processor.product(), "Pintalabios");
+        assert_eq!(parameters_processor.configuration().max_results(), 15);
+        assert_eq!(parameters_processor.configuration().min_similarity(), 0.0);
+        assert_eq!(
+            parameters_processor.websites(),
+            &vec![parameters::Website::SephoraSpain]
+        );
+    }
+
+    /// Tests the new method with a max results greater than the max allowed.
+    #[test]
+    fn new_max_results_greater_than_max_allowed() {
+        let parameters_processor = tear_up(
+            String::from("Pintalabios"),
+            1000,
+            0.0,
+            vec![parameters::Website::SephoraSpain],
+        );
+        assert_eq!(
+            parameters_processor.configuration().max_results(),
+            configuration::MAX_RESULTS
+        );
+    }
+
+    /// Tests the new method with a min similarity greater than 1.
+    #[test]
+    fn new_min_similarity_greater_than_1() {
+        let parameters_processor = tear_up(
+            String::from("Pintalabios"),
+            15,
+            1.1,
+            vec![parameters::Website::SephoraSpain],
+        );
+        assert_eq!(parameters_processor.configuration().min_similarity(), 1.0);
+    }
+
+    /// Tests the debug trait.
+    #[test]
+    fn debug_trait() {
+        let parameters_processor = tear_up(
+            String::from("Pintalabios"),
+            15,
+            0.0,
+            vec![parameters::Website::SephoraSpain],
+        );
+        assert_eq!(
+            format!("{:?}", parameters_processor),
+            "ParametersProcessor { configuration: Configuration { min_similarity: 0.0, max_results: 15 }, websites: [SephoraSpain], product: \"Pintalabios\" }"
+        );
+    }
+
+    /// Tests the configuration method.
+    #[test]
+    fn configuration() {
+        let max_results = 15;
+        let min_similarity = 0.0;
+        let parameters_processor = tear_up(
+            String::from("Pintalabios"),
+            max_results,
+            min_similarity,
+            vec![parameters::Website::SephoraSpain],
+        );
+        assert_eq!(
+            parameters_processor.configuration().max_results(),
+            max_results
+        );
+        assert_eq!(
+            parameters_processor.configuration().min_similarity(),
+            min_similarity
+        );
+    }
+
+    /// Tests the websites method.
+    #[test]
+    fn websites() {
+        let websites = vec![parameters::Website::SephoraSpain];
+        let parameters_processor = tear_up(String::from("Pintalabios"), 15, 0.0, websites.clone());
+        assert_eq!(
+            *parameters_processor.websites().first().unwrap(),
+            *websites.first().unwrap()
+        );
+    }
+
+    /// Tests the product method.
+    #[test]
+    fn product() {
+        let product = String::from("Pintalabios");
+        let parameters_processor = tear_up(
+            product.clone(),
+            15,
+            0.0,
+            vec![parameters::Website::SephoraSpain],
+        );
+        assert_eq!(*parameters_processor.product(), product);
     }
 }

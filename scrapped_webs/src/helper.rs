@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     /// Tests discount() with price_sales.
-    fn test_discount_with_price_sales() {
+    fn discount_with_price_sales() {
         let (discount_value, percentage_discount) = discount(50.0, Some(25.0)).unwrap();
         assert_eq!(discount_value, 25.0);
         assert_eq!(percentage_discount, 50);
@@ -173,13 +173,13 @@ mod tests {
     #[test]
     /// Discount method return None if there is not price_sales.
     #[should_panic]
-    fn test_discount_without_price_sales() {
+    fn discount_without_price_sales() {
         let (_discount_value, _percentage_discount) = discount(50.0, None).unwrap();
     }
 
     /// Tests the parsing between money string and return the value in floating pointer.
     #[test]
-    fn test_parse_price_string() {
+    fn parse_price_string_all_cases() {
         assert_eq!(38.95, parse_price_string("38,95 €".to_string()));
         assert_eq!(38.95, parse_price_string("38.95 $".to_string()));
         assert_eq!(38, parse_price_string("38 $".to_string()));
@@ -189,7 +189,7 @@ mod tests {
 
     /// Tests if the rating is properly normalized between 0-5.
     #[test]
-    fn test_normalized_rating() {
+    fn normalized_rating_all_cases() {
         assert_eq!(2.0, normalized_rating(20.0, 100.0));
         assert_eq!(10.0, normalized_rating(5.0, 5.0));
         assert_eq!(1.0, normalized_rating(1.0, 10.0));
@@ -197,7 +197,7 @@ mod tests {
 
     /// Tests if the inner html value is properly returned.
     #[test]
-    fn test_inner_html_value() {
+    fn inner_html_value_all_cases() {
         let html = r#"
             <!DOCTYPE html>
             <meta charset="utf-8">
@@ -221,7 +221,7 @@ mod tests {
 
     /// Tests if the attribute html value is properly returned.
     #[test]
-    fn test_attribute_html_value() {
+    fn attribute_html_value_all_cases() {
         let html = r#"
             <!DOCTYPE html>
             <meta charset="utf-8">
@@ -260,7 +260,7 @@ mod tests {
 
     /// Tests if the selector is properly found.
     #[test]
-    fn test_has_html_selector() {
+    fn has_html_selector_all_cases() {
         let html = r#"
             <!DOCTYPE html>
             <meta charset="utf-8">
@@ -272,5 +272,16 @@ mod tests {
         let element = document.root_element();
         assert!(has_html_selector(&element, "h1"));
         assert!(!has_html_selector(&element, "h2"));
+    }
+
+    /// Tests the compare_similarity method.
+    #[test]
+    fn compare_similarity_all_cases() {
+        assert!(compare_similarity("1234", "1234") == 1.0);
+        assert!(compare_similarity("1234", "12345") != 1.0);
+        assert!(compare_similarity("1234", "123") > 0.5);
+        assert!(compare_similarity("1234", "12") != 0.5);
+        assert!(compare_similarity("1234", "") == 0.0);
+        assert!(compare_similarity("1234", "5678") == 0.0);
     }
 }
