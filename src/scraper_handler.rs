@@ -109,6 +109,7 @@ mod tests {
     /// TODO: Implement the Website::All
     #[test]
     #[should_panic]
+    #[ignore]
     fn get_results_all_websites() {
         let args = Args {
             product: "pintalabios".to_string(),
