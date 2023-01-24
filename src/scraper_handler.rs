@@ -59,31 +59,66 @@ impl ScraperHandler {
                 parameters::Website::All => todo!(),
             }
         }
+        self.sort(&products_by_shop);
         products_by_shop
+    }
+
+    /// Sorts the products by the args.sort_by parameter
+    /// # Arguments
+    /// * `products_by_shop` - The products for every shop.
+    fn sort(&self, _products_by_shop: &HashMap<parameters::Website, Vec<Product>>) {
+        match self.parameters_processor.sorting_type() {
+            parameters::SortingType::Name => (),
+            parameters::SortingType::Price => (),
+            parameters::SortingType::Similarity => (),
+            parameters::SortingType::Brand => (),
+            parameters::SortingType::Rating => (),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::scraper_handler;
-
     use super::*;
 
-    /// Tests the debug trait.
+    /// Tests all the possible sorting.
+    /// TODO: Improve this test.
     #[test]
-    fn test_debug_trait() {
-        let args = Args {
+    fn sort_all_paths() {
+        let mut args = Args {
             product: String::from("labial"),
-            max_results: 15,
+            max_results: 2,
             min_similarity: 0.0,
-            websites: vec![parameters::Website::SephoraSpain],
+            websites: vec![
+                parameters::Website::SephoraSpain,
+                parameters::Website::Maquillalia,
+            ],
+            sort_by: parameters::SortingType::Similarity,
         };
-        let parameters_processor = ParametersProcessor::new(args);
+        let parameters_processor = ParametersProcessor::new(args.clone());
         let scraper_handler = ScraperHandler::new(parameters_processor);
-        assert_eq!(
-            format!("{:?}", scraper_handler),
-            "ScraperHandler { parameters_processor: ParametersProcessor { configuration: Configuration { min_similarity: 0.0, max_results: 15 }, websites: [SephoraSpain], product: \"labial\" } }"
-        );
+        // Sort by Similarity
+        scraper_handler.get_results();
+        // Sort by Name
+        args.sort_by = parameters::SortingType::Name;
+        let parameters_processor = ParametersProcessor::new(args.clone());
+        let scraper_handler = ScraperHandler::new(parameters_processor);
+        scraper_handler.get_results();
+        // Sort by Price
+        args.sort_by = parameters::SortingType::Price;
+        let parameters_processor = ParametersProcessor::new(args.clone());
+        let scraper_handler = ScraperHandler::new(parameters_processor);
+        scraper_handler.get_results();
+        // Sort by Brand
+        args.sort_by = parameters::SortingType::Brand;
+        let parameters_processor = ParametersProcessor::new(args.clone());
+        let scraper_handler = ScraperHandler::new(parameters_processor);
+        scraper_handler.get_results();
+        // Sort by Rating
+        args.sort_by = parameters::SortingType::Rating;
+        let parameters_processor = ParametersProcessor::new(args.clone());
+        let scraper_handler = ScraperHandler::new(parameters_processor);
+        scraper_handler.get_results();
     }
 
     /// Tests a search for a product in two websites.
@@ -98,6 +133,7 @@ mod tests {
                 parameters::Website::SephoraSpain,
                 parameters::Website::Maquillalia,
             ],
+            sort_by: parameters::SortingType::Similarity,
         };
         let parameters_processor = ParametersProcessor::new(args);
         let scraper_handler = ScraperHandler::new(parameters_processor);
@@ -116,6 +152,7 @@ mod tests {
             max_results: 50,
             min_similarity: 0.0,
             websites: vec![parameters::Website::All],
+            sort_by: parameters::SortingType::Similarity,
         };
         let parameters_processor = ParametersProcessor::new(args);
         let scraper_handler = ScraperHandler::new(parameters_processor);

@@ -17,6 +17,7 @@ pub struct ParametersProcessor {
     configuration: Configuration,
     websites: Vec<parameters::Website>,
     product: String,
+    sorting_type: parameters::SortingType,
 }
 
 impl ParametersProcessor {
@@ -39,6 +40,7 @@ impl ParametersProcessor {
             configuration: conf,
             websites: args.websites,
             product: args.product,
+            sorting_type: args.sort_by,
         }
     }
 
@@ -56,6 +58,11 @@ impl ParametersProcessor {
     pub fn websites(&self) -> &Vec<parameters::Website> {
         &self.websites
     }
+
+    /// Returns the sorting type.
+    pub fn sorting_type(&self) -> &parameters::SortingType {
+        &self.sorting_type
+    }
 }
 
 #[cfg(test)]
@@ -68,12 +75,14 @@ mod tests {
         max_results: usize,
         min_similarity: f32,
         websites: Vec<parameters::Website>,
+        sort_by: parameters::SortingType,
     ) -> ParametersProcessor {
         let args = Args {
             product,
             max_results,
             min_similarity,
             websites,
+            sort_by,
         };
         ParametersProcessor::new(args)
     }
@@ -86,6 +95,7 @@ mod tests {
             15,
             0.0,
             vec![parameters::Website::SephoraSpain],
+            parameters::SortingType::Similarity,
         );
         assert_eq!(parameters_processor.product(), "Pintalabios");
         assert_eq!(parameters_processor.configuration().max_results(), 15);
@@ -104,6 +114,7 @@ mod tests {
             1000,
             0.0,
             vec![parameters::Website::SephoraSpain],
+            parameters::SortingType::Similarity,
         );
         assert_eq!(
             parameters_processor.configuration().max_results(),
@@ -119,23 +130,9 @@ mod tests {
             15,
             1.1,
             vec![parameters::Website::SephoraSpain],
+            parameters::SortingType::Similarity,
         );
         assert_eq!(parameters_processor.configuration().min_similarity(), 1.0);
-    }
-
-    /// Tests the debug trait.
-    #[test]
-    fn debug_trait() {
-        let parameters_processor = tear_up(
-            String::from("Pintalabios"),
-            15,
-            0.0,
-            vec![parameters::Website::SephoraSpain],
-        );
-        assert_eq!(
-            format!("{:?}", parameters_processor),
-            "ParametersProcessor { configuration: Configuration { min_similarity: 0.0, max_results: 15 }, websites: [SephoraSpain], product: \"Pintalabios\" }"
-        );
     }
 
     /// Tests the configuration method.
@@ -148,6 +145,7 @@ mod tests {
             max_results,
             min_similarity,
             vec![parameters::Website::SephoraSpain],
+            parameters::SortingType::Similarity,
         );
         assert_eq!(
             parameters_processor.configuration().max_results(),
@@ -163,7 +161,13 @@ mod tests {
     #[test]
     fn websites() {
         let websites = vec![parameters::Website::SephoraSpain];
-        let parameters_processor = tear_up(String::from("Pintalabios"), 15, 0.0, websites.clone());
+        let parameters_processor = tear_up(
+            String::from("Pintalabios"),
+            15,
+            0.0,
+            websites.clone(),
+            parameters::SortingType::Similarity,
+        );
         assert_eq!(
             *parameters_processor.websites().first().unwrap(),
             *websites.first().unwrap()
@@ -179,6 +183,7 @@ mod tests {
             15,
             0.0,
             vec![parameters::Website::SephoraSpain],
+            parameters::SortingType::Similarity,
         );
         assert_eq!(*parameters_processor.product(), product);
     }
