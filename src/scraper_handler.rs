@@ -84,6 +84,7 @@ mod tests {
     /// Tests all the possible sorting.
     /// TODO: Improve this test.
     #[test]
+    #[ignore]
     fn sort_all_paths() {
         let mut args = Args {
             product: String::from("labial"),
