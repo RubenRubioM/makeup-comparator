@@ -14,6 +14,8 @@ use scrapped_webs::{
     webs::{maquillalia::Maquillalia, sephora::spain::SephoraSpain},
 };
 
+type ResultsByWebsite = HashMap<parameters::Website, Vec<Product>>;
+
 #[derive(Debug)]
 pub struct ScraperHandler {
     /// The configuration for the program.
@@ -36,8 +38,8 @@ impl ScraperHandler {
     /// # Returns
     /// A HashMap with the results of the search.
     /// The key is the website and the value is a vector of products.
-    pub fn get_results(&self) -> HashMap<parameters::Website, Vec<Product>> {
-        let mut products_by_shop = HashMap::<parameters::Website, Vec<Product>>::new();
+    pub fn get_results(&self) -> ResultsByWebsite {
+        let mut results_by_website = ResultsByWebsite::new();
 
         for web in self.parameters_processor.websites().iter() {
             match web {
@@ -47,26 +49,26 @@ impl ScraperHandler {
                     let products = sephora_spain
                         .look_for_products(self.parameters_processor.product().clone())
                         .unwrap();
-                    products_by_shop.insert(parameters::Website::SephoraSpain, products);
+                    results_by_website.insert(parameters::Website::SephoraSpain, products);
                 }
                 parameters::Website::Maquillalia => {
                     let maquillalia = Maquillalia::new(self.parameters_processor.configuration());
                     let products = maquillalia
                         .look_for_products(self.parameters_processor.product().clone())
                         .unwrap();
-                    products_by_shop.insert(parameters::Website::Maquillalia, products);
+                    results_by_website.insert(parameters::Website::Maquillalia, products);
                 }
                 parameters::Website::All => todo!(),
             }
         }
-        self.sort(&products_by_shop);
-        products_by_shop
+        self.sort(&results_by_website);
+        results_by_website
     }
 
     /// Sorts the products by the args.sort_by parameter
     /// # Arguments
-    /// * `products_by_shop` - The products for every shop.
-    fn sort(&self, _products_by_shop: &HashMap<parameters::Website, Vec<Product>>) {
+    /// * `results_by_website` - The products for every shop.
+    fn sort(&self, _results_by_website: &ResultsByWebsite) {
         match self.parameters_processor.sorting_type() {
             parameters::SortingType::Name => (),
             parameters::SortingType::Price => (),
@@ -138,8 +140,8 @@ mod tests {
         };
         let parameters_processor = ParametersProcessor::new(args);
         let scraper_handler = ScraperHandler::new(parameters_processor);
-        let products_by_shop = scraper_handler.get_results();
-        assert_eq!(products_by_shop.len(), 2);
+        let results_by_website = scraper_handler.get_results();
+        assert_eq!(results_by_website.len(), 2);
     }
 
     /// Tests a search for a product in all websites.
@@ -157,6 +159,6 @@ mod tests {
         };
         let parameters_processor = ParametersProcessor::new(args);
         let scraper_handler = ScraperHandler::new(parameters_processor);
-        let _products_by_shop = scraper_handler.get_results();
+        let _results_by_website = scraper_handler.get_results();
     }
 }
