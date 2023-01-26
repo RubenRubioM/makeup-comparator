@@ -211,7 +211,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
         for url in tones_urls {
             // TODO: Try to parallelize in the future.
             let url_string = helper::attribute_html_value(&url, "a", "href").unwrap();
-            println!("{}", url_string);
+            println!("{url_string}");
             let response = reqwest::blocking::get(&url_string).unwrap().text().unwrap();
             let document = scraper::Html::parse_document(&response);
             let mut tone = Self::create_tone(&document.root_element());
