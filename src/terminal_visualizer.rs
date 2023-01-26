@@ -8,4 +8,8 @@ use crate::parameters;
 
 type ResultsByWebsite = HashMap<parameters::Website, Vec<Product>>;
 
+/// Prints the formatted output in the terminal
+/// # Example
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// Labial
 pub fn print(_results_by_website: &ResultsByWebsite) {}

@@ -78,6 +78,15 @@ impl Tone {
         out
     }
 
+    /// Returns the actual price, doesn't matter if on sale or not
+    pub fn price(&self) -> f32 {
+        if self.price_sales.is_some() {
+            self.price_sales.unwrap()
+        } else {
+            self.price_standard
+        }
+    }
+
     /// Returns the name of the product.
     pub fn name(&self) -> &String {
         &self.name
@@ -200,6 +209,68 @@ impl Product {
             available,
         }
     }
+
+    /// Formats the Tone object to be pretty printed in terminal.
+    /// # Example
+    ///  if has tones: 95%. Labial Rare Beauty - 10.99-15.99 - 9.5: www.test.com
+    ///  if doesn't have tones: 95% - Labial Rare Beauty - 10.99 - 9.5: www.test.com
+    pub fn terminal_format(&self) -> String {
+        let mut out: String = String::new();
+        out.push_str(format!("{}. ", self.similarity_formatted()).as_str());
+        out.push_str(format!("{} {} - ", self.name, self.brand).as_str());
+
+        match self.tones.as_ref() {
+            // If we have tones, look for the lowest and highest price
+            Some(tones) => {
+                let mut lowest_price: f32 = f32::MAX;
+                let mut highest_price: f32 = f32::MIN;
+                for tone in tones {
+                    let price = tone.price();
+                    if price > highest_price {
+                        highest_price = price;
+                    }
+                    if price < lowest_price {
+                        lowest_price = price;
+                    }
+                }
+                out.push_str(format!("{}-{}", lowest_price, highest_price).as_str());
+            }
+            None => match self.price_sales {
+                Some(price_sales) => {
+                    let strikedthrought_price = ansi_term::Style::new()
+                        .strikethrough()
+                        .paint(self.price_standard.to_string())
+                        .to_string();
+                    out.push_str(
+                        format!(
+                            "{} {}({}%)",
+                            strikedthrought_price,
+                            price_sales,
+                            helper::discount(self.price_standard, self.price_sales)
+                                .unwrap()
+                                .1
+                        )
+                        .as_str(),
+                    )
+                }
+                None => out.push_str(format!("{}", self.price_standard).as_str()),
+            },
+        }
+
+        if let Some(rating) = self.rating {
+            out.push_str(format!(" - {}⭐", rating).as_str());
+        }
+        out.push_str(format!(": {}", self.link).as_str());
+        out
+    }
+
+    /// Returns the similarity rounded and formatted
+    /// # Example
+    /// .621242 = 62.12%
+    fn similarity_formatted(&self) -> String {
+        format!("{:.2}%", self.similarity * 100.0)
+    }
+
     /// Returns the name of the product.
     pub fn name(&self) -> &String {
         &self.name
@@ -457,9 +528,105 @@ mod tests {
         );
     }
 
-    /// Tests the function terminal_format for a Tone
+    /// Tests the price function for the tone
     #[test]
-    fn tone_formatting_for_terminal_available_on_sale_with_rating() {
+    fn price_all_paths() {
+        // Tone with price on sale.
+        let price_standard: f32 = 10.0;
+        let price_sales: f32 = 5.0;
+        let tone_on_sale: Tone = Tone {
+            name: String::from("Tone 1"),
+            price_standard,
+            price_sales: Some(price_sales),
+            available: true,
+            url: None,
+            rating: Some(9.5),
+        };
+        assert_eq!(tone_on_sale.price(), price_sales);
+
+        // Tone without price on sale.
+        let tone: Tone = Tone {
+            name: String::from("Tone 1"),
+            price_standard,
+            price_sales: None,
+            available: true,
+            url: None,
+            rating: Some(9.5),
+        };
+        assert_eq!(tone.price(), price_standard);
+    }
+
+    /// Tests the function Product::terminal_format without tones and on sale.
+    #[test]
+    fn product_format_terminal_without_tones() {
+        let product: Product = Product {
+            name: String::from("Product 1"),
+            brand: String::from("Brand"),
+            link: String::from("http://www.test.com"),
+            price_standard: 10.0,
+            price_sales: None,
+            rating: Some(9.5),
+            similarity: 0.9,
+            available: true,
+            tones: None,
+        };
+        product.terminal_format();
+
+        let product_on_sale: Product = Product {
+            name: String::from("Product 1"),
+            brand: String::from("Brand"),
+            link: String::from("http://www.test.com"),
+            price_standard: 10.0,
+            price_sales: Some(5.0),
+            rating: Some(9.5),
+            similarity: 0.9,
+            available: true,
+            tones: None,
+        };
+        product_on_sale.terminal_format();
+        // assert_eq!(product.terminal_format(), "90%. Product 1 Brand - 10 5(50%) - 9.5⭐: http://www.test.com");
+    }
+
+    /// Tests the function Product::terminal_format with tones.
+    #[test]
+    fn product_format_terminal_with_tones() {
+        let tone: Tone = Tone {
+            name: String::from("Tone 1"),
+            price_standard: 50.99,
+            price_sales: None,
+            available: true,
+            url: None,
+            rating: None,
+        };
+        let tone_on_sale: Tone = Tone {
+            name: String::from("Tone 1"),
+            price_standard: 10.0,
+            price_sales: Some(5.0),
+            available: true,
+            url: None,
+            rating: None,
+        };
+
+        let product: Product = Product {
+            name: String::from("Product 1"),
+            brand: String::from("Brand"),
+            link: String::from("http://www.test.com"),
+            price_standard: 10.0,
+            price_sales: Some(5.0),
+            rating: Some(9.5),
+            similarity: 0.95421,
+            available: true,
+            tones: Some(vec![tone, tone_on_sale]),
+        };
+        assert_eq!(
+            product.terminal_format(),
+            "95.42%. Product 1 Brand - 5-50.99 - 9.5⭐: http://www.test.com"
+        );
+    }
+
+    /// Tests the function Tone::terminal_format with a tone available, on sale and with rating
+    #[test]
+    fn tone_format_terminal_available_on_sale_with_rating() {
         let tone: Tone = Tone {
             name: String::from("Tone 1"),
             price_standard: 10.0,
@@ -472,9 +639,9 @@ mod tests {
         // assert_eq!(output, "✔️ Tone 1 -  ̶10 5(50%) - 9.5⭐"); Can not test strikethrough text
     }
 
-    /// Tests the function terminal_format for a Tone
+    /// Tests the function Tone::terminal_format with a tone unavailable and without rating
     #[test]
-    fn tone_formatting_for_terminal_unavailable_without_rating() {
+    fn tone_format_terminal_unavailable_without_rating() {
         let tone: Tone = Tone {
             name: String::from("Tone 1"),
             price_standard: 10.0,
@@ -483,13 +650,12 @@ mod tests {
             url: None,
             rating: None,
         };
-        let output = tone.terminal_format();
-        assert_eq!(output, "✔️ Tone 1 - 10");
+        assert_eq!(tone.terminal_format(), "✔️ Tone 1 - 10");
     }
 
-    /// Tests the function terminal_format for a Tone
+    /// Tests the function Tone::terminal_format with a tone unavailable and with rating
     #[test]
-    fn tone_formatting_for_terminal_unavailable_with_rating() {
+    fn tone_format_terminal_unavailable_with_rating() {
         let tone: Tone = Tone {
             name: String::from("Tone 1"),
             price_standard: 10.0,
@@ -498,13 +664,12 @@ mod tests {
             url: None,
             rating: Some(9.5),
         };
-        let output = tone.terminal_format();
-        assert_eq!(output, "✔️ Tone 1 - 10 - 9.5⭐");
+        assert_eq!(tone.terminal_format(), "✔️ Tone 1 - 10 - 9.5⭐");
     }
 
-    /// Tests the function terminal_format for a Tone
+    /// Tests the function Tone::terminal_format with a tone unavailable, on sale and without rating
     #[test]
-    fn tone_formatting_for_terminal_unavailable_on_sale_without_rating() {
+    fn tone_format_terminal_unavailable_on_sale_without_rating() {
         let tone: Tone = Tone {
             name: String::from("Tone 1"),
             price_standard: 10.0,
