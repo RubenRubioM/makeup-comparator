@@ -25,6 +25,6 @@ fn main() {
     let scraper_handler = ScraperHandler::new(parameters_processor);
     let results_by_website = scraper_handler.get_results();
     terminal_visualizer::print(&results_by_website);
-    println!("{:#?}", results_by_website);
+    println!("{results_by_website:#?}");
     println!("Makeup comparator!");
 }
