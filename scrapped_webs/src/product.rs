@@ -43,7 +43,7 @@ impl Tone {
 
     /// Formats the Tone object to be pretty printed in terminal.
     /// # Example
-    /// if available, on sale and rating = ✔️ Name -  ̶9̶.̶9̶9̶  4.99(50%) - 9.5
+    /// if available, on sale and rating = ✔️ Name -  ̶9̶.̶9̶9̶  4.99(50%) - 9.5⭐
     /// if not available, not on sale and no rating = ❌ Name - 9.99
     pub fn terminal_format(&self) -> String {
         let mut out: String = String::new();
@@ -212,8 +212,8 @@ impl Product {
 
     /// Formats the Tone object to be pretty printed in terminal.
     /// # Example
-    ///  if has tones: 95%. Labial Rare Beauty - 10.99-15.99 - 9.5: www.test.com
-    ///  if doesn't have tones: 95% - Labial Rare Beauty - 10.99 - 9.5: www.test.com
+    ///  if has tones: 95%. Labial Rare Beauty - 10.99-15.99 - 9.5⭐: www.test.com
+    ///  if doesn't have tones: 95% - Labial Rare Beauty - 10.99 - 9.5⭐: www.test.com
     pub fn terminal_format(&self) -> String {
         let mut out: String = String::new();
         out.push_str(format!("{}. ", self.similarity_formatted()).as_str());
