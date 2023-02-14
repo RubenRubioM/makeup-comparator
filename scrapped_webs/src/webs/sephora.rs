@@ -76,7 +76,7 @@ pub mod spain {
 
             // If it only find 1 result it redirects to a product page directly with /p/product_link.html
             if response_url.as_str().contains("/p/") {
-                println!("GET: {}", response_url);
+                println!("GET: {response_url}");
                 let mut product = SephoraSpain::create_product(&document);
                 product.set_link(response_url.to_string());
                 let full_name = format!("{} {}", product.brand(), product.name());

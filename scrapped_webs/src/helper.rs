@@ -20,11 +20,10 @@ pub fn compare_similarity(name1: &str, name2: &str) -> f32 {
 /// let (discount_value, percentage_discount) = helper::discount(30.0, Some(15.0)).unwrap();
 /// assert_eq!(discount_value, 15.0);
 /// assert_eq!(percentage_discount, 50);
-#[allow(dead_code)]
 pub fn discount(price_standard: f32, price_sales: Option<f32>) -> Option<(f32, u8)> {
     if let Some(price_sales) = price_sales {
         let discount_value: f32 = price_standard - price_sales;
-        let discount: u8 = ((price_sales / price_standard) * 100.0).round() as u8;
+        let discount: u8 = (100.0 - ((price_sales / price_standard) * 100.0)).round() as u8;
         return Some((discount_value, discount));
     }
     None
@@ -165,9 +164,9 @@ mod tests {
     #[test]
     /// Tests discount() with price_sales.
     fn discount_with_price_sales() {
-        let (discount_value, percentage_discount) = discount(50.0, Some(25.0)).unwrap();
+        let (discount_value, percentage_discount) = discount(100.0, Some(75.0)).unwrap();
         assert_eq!(discount_value, 25.0);
-        assert_eq!(percentage_discount, 50);
+        assert_eq!(percentage_discount, 25);
     }
 
     #[test]
