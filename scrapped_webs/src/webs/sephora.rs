@@ -4,7 +4,7 @@ use std::thread;
 use std::thread::JoinHandle;
 
 use crate::configuration::Configuration;
-use crate::helper;
+use crate::helper::{scrapping, utilities};
 use crate::{
     product::Product,
     product::Tone,
@@ -12,8 +12,6 @@ use crate::{
 };
 use scraper::ElementRef;
 use scraper::Html;
-
-use ansi_term::Colour::RGB;
 
 /* sephora.es logic explanation
 1 - We search throw the standard search endpoint "buscar?q=" to retrieve the results.
@@ -66,21 +64,19 @@ pub mod spain {
             // We receive a word like "This word" and we should search in format of "This+word".
             let formatted_name = name.replace(' ', "+");
             let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
-            println!("GET: {query}");
 
             // If the name match exactly, SephoraSpain redirects you to the product page.
-            let response = reqwest::blocking::get(&query).unwrap();
+            let response = reqwest::blocking::get(query).unwrap();
             let response_url = response.url().to_owned();
             let document = scraper::Html::parse_document(&response.text().unwrap());
             let mut products = Vec::<Product>::new();
 
             // If it only find 1 result it redirects to a product page directly with /p/product_link.html
             if response_url.as_str().contains("/p/") {
-                println!("GET: {response_url}");
                 let mut product = SephoraSpain::create_product(&document);
                 product.set_link(response_url.to_string());
                 let full_name = format!("{} {}", product.brand(), product.name());
-                product.set_similarity(helper::compare_similarity(
+                product.set_similarity(utilities::compare_similarity(
                     full_name.as_str(),
                     name.as_str(),
                 ));
@@ -88,7 +84,6 @@ pub mod spain {
             } else {
                 // Get the urls for all the coincidence we found in the search with the given `name`
                 let products_urls = self.search_results_urls(&document, name.as_str())?;
-                println!("Found {} results", products_urls.len());
 
                 // Use threads to perform concurrency when sending petitions.
                 let mut handles = Vec::<JoinHandle<Product>>::new();
@@ -99,14 +94,13 @@ pub mod spain {
                         thread::Builder::new()
                             .name(url.clone())
                             .spawn(move || {
-                                println!("GET: {url}");
                                 let response =
                                     reqwest::blocking::get(&url).unwrap().text().unwrap();
                                 let document = scraper::Html::parse_document(&response);
                                 let mut product: Product = SephoraSpain::create_product(&document);
                                 product.set_link(url);
                                 let full_name = format!("{} {}", product.brand(), product.name());
-                                product.set_similarity(helper::compare_similarity(
+                                product.set_similarity(utilities::compare_similarity(
                                     full_name.as_str(),
                                     name_copy.as_str(),
                                 ));
@@ -142,13 +136,13 @@ pub mod spain {
 
             for item in items {
                 any_results = true;
-                let brand = helper::inner_html_value(&item, "span.product-brand").unwrap();
-                let title = helper::attribute_html_value(&item, "h3", "title").unwrap();
-                let url = helper::attribute_html_value(&item, "a", "href").unwrap();
+                let brand = scrapping::inner_html_value(&item, "span.product-brand").unwrap();
+                let title = scrapping::attribute_html_value(&item, "h3", "title").unwrap();
+                let url = scrapping::attribute_html_value(&item, "a", "href").unwrap();
 
                 // full_name format = {Brand} {Title} = {Rare Beauty} {Kind Words - Barra de labios mate}
                 let full_name = brand + " " + title.as_str();
-                let similarity = helper::compare_similarity(name, &full_name);
+                let similarity = utilities::compare_similarity(name, &full_name);
 
                 if similarity >= self.config.min_similarity() {
                     urls.push(url.to_string());
@@ -156,15 +150,6 @@ pub mod spain {
                     if num_results == self.config.max_results() {
                         break;
                     }
-                } else {
-                    println!(
-                        "{}",
-                        RGB(255, 121, 0).normal().paint(format!(
-                            "Discarding [{:.2}%]: {}",
-                            similarity * 100.0,
-                            full_name
-                        ))
-                    );
                 }
             }
 
@@ -181,11 +166,10 @@ pub mod spain {
             let mut product = Product::default();
             let html = document.root_element();
 
-            let name = helper::attribute_html_value(&html, "h1>meta", "content").unwrap();
-            println!("{name}");
+            let name = scrapping::attribute_html_value(&html, "h1>meta", "content").unwrap();
             product.set_name(name);
 
-            let brand = helper::inner_html_value(&html, "span.brand-name>a").unwrap();
+            let brand = scrapping::inner_html_value(&html, "span.brand-name>a").unwrap();
             product.set_brand(brand);
 
             let mut tones: Vec<Tone> = vec![];
@@ -213,15 +197,15 @@ pub mod spain {
             product.set_tones(if tones.is_empty() { None } else { Some(tones) });
 
             // FIXME: It is getting the number of reviews instead of the rating.
-            if helper::has_html_selector(&html, "div.bv_numReviews_text>span>meta") {
+            if scrapping::has_html_selector(&html, "div.bv_numReviews_text>span>meta") {
                 let mut rating =
-                    helper::inner_html_value(&html, "div.bv_numReviews_text>span>meta").unwrap();
+                    scrapping::inner_html_value(&html, "div.bv_numReviews_text>span>meta").unwrap();
                 rating = if rating.is_empty() {
                     "0.0".to_string()
                 } else {
                     rating
                 };
-                product.set_rating(Some(helper::normalized_rating(
+                product.set_rating(Some(utilities::normalized_rating(
                     rating.parse::<f32>().unwrap(),
                     MAX_RATING,
                 )));
@@ -234,25 +218,26 @@ pub mod spain {
 
         fn create_tone(element: &ElementRef) -> Tone {
             // TODO: Find if the product is available. Right know we basically don't add it to the list.
-            let tone_name = helper::inner_html_value(element, "span.variation-title")
+            let tone_name = scrapping::inner_html_value(element, "span.variation-title")
                 .unwrap()
                 .trim()
                 .to_string();
 
             // price_standard could be inside span.price-standard or span.price-sales-standard
-            let price_standard: f32 = if helper::has_html_selector(element, "span.price-standard") {
-                helper::parse_price_string(
-                    helper::inner_html_value(element, "span.price-standard").unwrap(),
-                )
-            } else {
-                helper::parse_price_string(
-                    helper::inner_html_value(element, "span.price-sales-standard").unwrap(),
-                )
-            };
+            let price_standard: f32 =
+                if scrapping::has_html_selector(element, "span.price-standard") {
+                    utilities::parse_price_string(
+                        scrapping::inner_html_value(element, "span.price-standard").unwrap(),
+                    )
+                } else {
+                    utilities::parse_price_string(
+                        scrapping::inner_html_value(element, "span.price-sales-standard").unwrap(),
+                    )
+                };
 
             // price_standard could also be inside span.price-sales this is why later we check if it is greater than price_sale
-            let price_sale: f32 = helper::parse_price_string(
-                helper::inner_html_value(element, "span.price-sales").unwrap(),
+            let price_sale: f32 = utilities::parse_price_string(
+                scrapping::inner_html_value(element, "span.price-sales").unwrap(),
             );
 
             Tone::new(
