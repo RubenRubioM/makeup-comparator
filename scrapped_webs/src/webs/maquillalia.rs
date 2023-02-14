@@ -16,10 +16,9 @@
 use std::thread::JoinHandle;
 
 use crate::configuration::Configuration;
-use crate::helper;
+use crate::helper::{scrapping, utilities};
 use crate::product::{Product, Tone};
 use crate::scrappable::{Scrappable, SearchError};
-use ansi_term::Colour::RGB;
 
 // Webpage url.
 const URL: &str = "https://www.maquillalia.com/";
@@ -76,12 +75,11 @@ impl<'a> Scrappable for Maquillalia<'a> {
         // TODO: Im not sure if i can parallelize and preserve the order of insertion in the products_urls vector in order by page.
         while !is_last_page {
             let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}&{PAGINATION_SUFFIX}{page}");
-            println!("GET: {query}");
 
-            let response = reqwest::blocking::get(&query).unwrap();
+            let response = reqwest::blocking::get(query).unwrap();
             let document = scraper::Html::parse_document(&response.text().unwrap());
             let total_results =
-                helper::inner_html_value(&document.root_element(), "div.NumPro>strong").unwrap();
+                scrapping::inner_html_value(&document.root_element(), "div.NumPro>strong").unwrap();
             // Get the urls for all the coincidence we found in the search with the given `name`
             let page_products_urls = self.search_results_urls(&document, name.as_str())?;
             for product_url in page_products_urls {
@@ -101,8 +99,6 @@ impl<'a> Scrappable for Maquillalia<'a> {
             }
         }
 
-        println!("Found {} results", products_urls.len());
-
         // Use threads to perform concurrency when sending petitions.
         let mut handles = Vec::<JoinHandle<Product>>::new();
         for url in products_urls {
@@ -112,13 +108,12 @@ impl<'a> Scrappable for Maquillalia<'a> {
                 std::thread::Builder::new()
                     .name(url.clone())
                     .spawn(move || {
-                        println!("GET: {url}");
                         let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
                         let document = scraper::Html::parse_document(&response);
                         let mut product: Product = Self::create_product(&document);
                         product.set_link(url);
                         let full_name = format!("{} {}", product.brand(), product.name());
-                        product.set_similarity(helper::compare_similarity(
+                        product.set_similarity(utilities::compare_similarity(
                             full_name.as_str(),
                             name_copy.as_str(),
                         ));
@@ -142,7 +137,8 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let mut any_results = false;
 
         // Check if we find the flag that indicates that we did not find any results.
-        if helper::inner_html_value(&document.root_element(), "div.msje-wrng>div.msje-icon").is_ok()
+        if scrapping::inner_html_value(&document.root_element(), "div.msje-wrng>div.msje-icon")
+            .is_ok()
         {
             return Err(SearchError::NotFound);
         }
@@ -156,12 +152,12 @@ impl<'a> Scrappable for Maquillalia<'a> {
         for item in items {
             // In the search page we have all the tones for a product so we will only store one of them and skip the rest because they are separated in the las dash({Brand} - {Name} - {Tone}).
             // Name format is {Brand} - {Name} - {Tone}
-            let element_name = helper::inner_html_value(&item, "h3.Title>a").unwrap();
+            let element_name = scrapping::inner_html_value(&item, "h3.Title>a").unwrap();
             let full_name = Maquillalia::get_name_without_tone(&element_name);
-            let url = helper::attribute_html_value(&item, "h3.Title>a", "href").unwrap();
+            let url = scrapping::attribute_html_value(&item, "h3.Title>a", "href").unwrap();
             any_results = true;
 
-            let similarity = helper::compare_similarity(name, &full_name);
+            let similarity = utilities::compare_similarity(name, &full_name);
             if similarity >= self.config.min_similarity() {
                 // If we already have the product name, we skip the product because must be a tone of that product.
                 if individual_products.contains(&full_name) {
@@ -170,15 +166,6 @@ impl<'a> Scrappable for Maquillalia<'a> {
 
                 individual_products.push(full_name);
                 urls.push(url.to_string());
-            } else {
-                println!(
-                    "{}",
-                    RGB(255, 121, 0).normal().paint(format!(
-                        "Discarding [{:.2}%]: {}",
-                        similarity * 100.0,
-                        full_name
-                    ))
-                );
             }
         }
 
@@ -197,7 +184,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let html = document.root_element();
 
         let full_name = Maquillalia::get_name_without_tone(
-            &helper::inner_html_value(&html, "h1.Title").unwrap(),
+            &scrapping::inner_html_value(&html, "h1.Title").unwrap(),
         );
         // TODO: Remove trailing and beginning white spaces.
         let mut name_and_brand = full_name.trim().split('-');
@@ -210,8 +197,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let tones_urls = document.select(&tones_urls_selector);
         for url in tones_urls {
             // TODO: Try to parallelize in the future.
-            let url_string = helper::attribute_html_value(&url, "a", "href").unwrap();
-            println!("{url_string}");
+            let url_string = scrapping::attribute_html_value(&url, "a", "href").unwrap();
             let response = reqwest::blocking::get(&url_string).unwrap().text().unwrap();
             let document = scraper::Html::parse_document(&response);
             let mut tone = Self::create_tone(&document.root_element());
@@ -220,21 +206,23 @@ impl<'a> Scrappable for Maquillalia<'a> {
         }
 
         if product.tones().is_none() {
-            if helper::has_html_selector(&html, "table>tbody>tr>td>div.Price>del") {
+            if scrapping::has_html_selector(&html, "table>tbody>tr>td>div.Price>del") {
                 // It is on sale.
-                product.set_price_standard(helper::parse_price_string(
-                    helper::inner_html_value(&html, "table>tbody>tr>td>div.Price>del").unwrap(),
+                product.set_price_standard(utilities::parse_price_string(
+                    scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>del").unwrap(),
                 ));
-                product.set_price_sales(Some(helper::parse_price_string(
-                    helper::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong").unwrap(),
+                product.set_price_sales(Some(utilities::parse_price_string(
+                    scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong")
+                        .unwrap(),
                 )));
             } else {
-                product.set_price_standard(helper::parse_price_string(
-                    helper::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong").unwrap(),
+                product.set_price_standard(utilities::parse_price_string(
+                    scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong")
+                        .unwrap(),
                 ));
             }
-            product.set_rating(Some(helper::normalized_rating(
-                helper::attribute_html_value(&html, "div.Rating>span.Stars", "data-rating")
+            product.set_rating(Some(utilities::normalized_rating(
+                scrapping::attribute_html_value(&html, "div.Rating>span.Stars", "data-rating")
                     .unwrap()
                     .parse()
                     .unwrap(),
@@ -246,26 +234,26 @@ impl<'a> Scrappable for Maquillalia<'a> {
 
     fn create_tone(element: &scraper::ElementRef) -> Tone {
         let tone_name =
-            Maquillalia::get_tone_name(&helper::inner_html_value(element, "h1.Title").unwrap())
+            Maquillalia::get_tone_name(&scrapping::inner_html_value(element, "h1.Title").unwrap())
                 .trim()
                 .to_string();
         let price_standard;
         let mut price_sales = Option::<f32>::None;
-        if helper::has_html_selector(element, "table>tbody>tr>td>div.Price>del") {
+        if scrapping::has_html_selector(element, "table>tbody>tr>td>div.Price>del") {
             // It is on sale.
-            price_standard = helper::parse_price_string(
-                helper::inner_html_value(element, "table>tbody>tr>td>div.Price>del").unwrap(),
+            price_standard = utilities::parse_price_string(
+                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>del").unwrap(),
             );
-            price_sales = Some(helper::parse_price_string(
-                helper::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
+            price_sales = Some(utilities::parse_price_string(
+                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
             ));
         } else {
-            price_standard = helper::parse_price_string(
-                helper::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
+            price_standard = utilities::parse_price_string(
+                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
             );
         }
-        let rating = helper::normalized_rating(
-            helper::attribute_html_value(element, "div.Rating>span.Stars", "data-rating")
+        let rating = utilities::normalized_rating(
+            scrapping::attribute_html_value(element, "div.Rating>span.Stars", "data-rating")
                 .unwrap()
                 .parse()
                 .unwrap(),

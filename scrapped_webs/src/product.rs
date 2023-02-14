@@ -3,7 +3,7 @@
 use ansi_term;
 use std::fmt::Display;
 
-use crate::helper;
+use crate::helper::utilities;
 
 /// Defines a tone.
 #[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
@@ -63,7 +63,7 @@ impl Tone {
                         "{}€ {}€({}%)",
                         strikedthrought_price,
                         price_sales,
-                        helper::discount(self.price_standard, self.price_sales)
+                        utilities::discount(self.price_standard, self.price_sales)
                             .unwrap()
                             .1
                     )
@@ -246,7 +246,7 @@ impl Product {
                             "{}€ {}€({}%)",
                             strikedthrought_price,
                             price_sales,
-                            helper::discount(self.price_standard, self.price_sales)
+                            utilities::discount(self.price_standard, self.price_sales)
                                 .unwrap()
                                 .1
                         )
