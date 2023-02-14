@@ -46,10 +46,10 @@ impl Tone {
     /// if available, on sale and rating = ✔️ Name -  ̶9̶.̶9̶9̶  4.99(50%) - 9.5⭐
     /// if not available, not on sale and no rating = ❌ Name - 9.99
     pub fn terminal_format(&self) -> String {
-        let mut out: String = String::new();
+        let mut out: String = String::from("    - ");
         match self.available {
-            true => out.push_str("✔️ "),
-            false => out.push_str("❌ "),
+            true => out.push_str("✔️   "),
+            false => out.push_str("❌   "),
         }
         out.push_str(format!("{} - ", self.name).as_str());
         match self.price_sales {
@@ -60,7 +60,7 @@ impl Tone {
                     .to_string();
                 out.push_str(
                     format!(
-                        "{} {}({}%)",
+                        "{}€ {}€({}%)",
                         strikedthrought_price,
                         price_sales,
                         helper::discount(self.price_standard, self.price_sales)
@@ -70,7 +70,7 @@ impl Tone {
                     .as_str(),
                 )
             }
-            None => out.push_str(format!("{}", self.price_standard).as_str()),
+            None => out.push_str(format!("{}€", self.price_standard).as_str()),
         }
         if let Some(rating) = self.rating {
             out.push_str(format!(" - {rating}⭐").as_str())
@@ -216,8 +216,8 @@ impl Product {
     ///  if doesn't have tones: 95% - Labial Rare Beauty - 10.99 - 9.5⭐: www.test.com
     pub fn terminal_format(&self) -> String {
         let mut out: String = String::new();
-        out.push_str(format!("{}. ", self.similarity_formatted()).as_str());
-        out.push_str(format!("{} {} - ", self.name, self.brand).as_str());
+        out.push_str(format!("- {}. ", self.similarity_formatted()).as_str());
+        out.push_str(format!("{} - {} - ", self.name, self.brand).as_str());
 
         match self.tones.as_ref() {
             // If we have tones, look for the lowest and highest price
@@ -233,7 +233,7 @@ impl Product {
                         lowest_price = price;
                     }
                 }
-                out.push_str(format!("{lowest_price}-{highest_price}").as_str());
+                out.push_str(format!("{lowest_price}€-{highest_price}€").as_str());
             }
             None => match self.price_sales {
                 Some(price_sales) => {
@@ -243,7 +243,7 @@ impl Product {
                         .to_string();
                     out.push_str(
                         format!(
-                            "{} {}({}%)",
+                            "{}€ {}€({}%)",
                             strikedthrought_price,
                             price_sales,
                             helper::discount(self.price_standard, self.price_sales)
@@ -253,7 +253,7 @@ impl Product {
                         .as_str(),
                     )
                 }
-                None => out.push_str(format!("{}", self.price_standard).as_str()),
+                None => out.push_str(format!("{}€", self.price_standard).as_str()),
             },
         }
 
@@ -584,7 +584,7 @@ mod tests {
             tones: None,
         };
         product_on_sale.terminal_format();
-        // assert_eq!(product.terminal_format(), "90%. Product 1 Brand - 10 5(50%) - 9.5⭐: http://www.test.com");
+        // assert_eq!(product.terminal_format(), "90%. Product 1 Brand - 10€ 5€(50%) - 9.5⭐: http://www.test.com");
     }
 
     /// Tests the function Product::terminal_format with tones.
@@ -620,7 +620,7 @@ mod tests {
         };
         assert_eq!(
             product.terminal_format(),
-            "95.42%. Product 1 Brand - 5-50.99 - 9.5⭐: http://www.test.com"
+            "- 95.42%. Product 1 - Brand - 5€-50.99€ - 9.5⭐: http://www.test.com"
         );
     }
 
@@ -636,7 +636,7 @@ mod tests {
             rating: Some(9.5),
         };
         tone.terminal_format();
-        // assert_eq!(output, "✔️ Tone 1 -  ̶10 5(50%) - 9.5⭐"); Can not test strikethrough text
+        // assert_eq!(output, "✔️   Tone 1 -  ̶10€ 5€(50%) - 9.5⭐"); Can not test strikethrough text
     }
 
     /// Tests the function Tone::terminal_format with a tone unavailable and without rating
@@ -650,7 +650,7 @@ mod tests {
             url: None,
             rating: None,
         };
-        assert_eq!(tone.terminal_format(), "❌ Tone 1 - 10");
+        assert_eq!(tone.terminal_format(), "    - ❌   Tone 1 - 10€");
     }
 
     /// Tests the function Tone::terminal_format with a tone unavailable and with rating
@@ -664,7 +664,7 @@ mod tests {
             url: None,
             rating: Some(9.5),
         };
-        assert_eq!(tone.terminal_format(), "❌ Tone 1 - 10 - 9.5⭐");
+        assert_eq!(tone.terminal_format(), "    - ❌   Tone 1 - 10€ - 9.5⭐");
     }
 
     /// Tests the function Tone::terminal_format with a tone unavailable, on sale and without rating
@@ -679,6 +679,6 @@ mod tests {
             rating: None,
         };
         tone.terminal_format();
-        // assert_eq!(output, "❌ Tone 1 -  ̶10 5(50%)"); Can not test strikethrough text
+        // assert_eq!(output, "❌   Tone 1 -  ̶10€ 5€(50%)"); Can not test strikethrough text
     }
 }
