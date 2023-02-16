@@ -63,7 +63,7 @@ impl<'a> Maquillalia<'a> {
 
 /// Scrappable trait implementation for Maquillalia.
 impl<'a> Scrappable for Maquillalia<'a> {
-    fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError> {
+    fn look_for_products(&self, name: String) -> Result<Vec<Product>, anyhow::Error> {
         // We receive a word like "This word" and we should search in format of "This+word".
         let formatted_name = name.replace(' ', "+");
         let mut page: usize = 1;
@@ -100,15 +100,25 @@ impl<'a> Scrappable for Maquillalia<'a> {
         }
 
         // Use threads to perform concurrency when sending petitions.
-        let mut handles = Vec::<JoinHandle<Product>>::new();
+        let mut handles = Vec::<JoinHandle<Option<Product>>>::new();
         for url in products_urls {
             // Make a copy to be able to send via threads.
             let name_copy = name.clone();
             handles.push(
                 std::thread::Builder::new()
                     .name(url.clone())
-                    .spawn(move || {
-                        let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
+                    .spawn(move || -> Option<Product> {
+                        let response: String;
+                        // TODO: Maybe add some logging in case of returning None
+                        if let Ok(http_response) = reqwest::blocking::get(&url) {
+                            if let Ok(text) = http_response.text() {
+                                response = text;
+                            } else {
+                                return None;
+                            }
+                        } else {
+                            return None;
+                        }
                         let document = scraper::Html::parse_document(&response);
                         let mut product: Product = Self::create_product(&document);
                         product.set_link(url);
@@ -117,13 +127,15 @@ impl<'a> Scrappable for Maquillalia<'a> {
                             full_name.as_str(),
                             name_copy.as_str(),
                         ));
-                        product
+                        Some(product)
                     })
                     .unwrap(),
             );
         }
         for handle in handles {
-            products.push(handle.join().unwrap());
+            if let Some(product) = handle.join().unwrap() {
+                products.push(product);
+            }
         }
         Ok(products)
     }
@@ -132,7 +144,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
         &self,
         document: &scraper::Html,
         name: &str,
-    ) -> Result<Vec<String>, SearchError> {
+    ) -> Result<Vec<String>, anyhow::Error> {
         let mut urls: Vec<String> = Vec::new();
         let mut any_results = false;
 
@@ -140,7 +152,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
         if scrapping::inner_html_value(&document.root_element(), "div.msje-wrng>div.msje-icon")
             .is_ok()
         {
-            return Err(SearchError::NotFound);
+            return Err(anyhow::anyhow!(SearchError::NotFound));
         }
 
         let products_grid_selector = scraper::Selector::parse("div.ListProds>div").unwrap();
@@ -172,9 +184,9 @@ impl<'a> Scrappable for Maquillalia<'a> {
         if any_results && !urls.is_empty() {
             Ok(urls)
         } else if any_results && urls.is_empty() {
-            Err(SearchError::NotEnoughSimilarity)
+            Err(anyhow::anyhow!(SearchError::NotEnoughSimilarity))
         } else {
-            Err(SearchError::NotFound)
+            Err(anyhow::anyhow!(SearchError::NotFound))
         }
     }
 

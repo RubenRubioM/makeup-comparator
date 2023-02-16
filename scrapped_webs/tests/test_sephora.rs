@@ -85,7 +85,7 @@ mod sephora_spain {
 
         match sephora_spain.look_for_products(String::from("Taemin")) {
             Ok(_) => panic!("We should not find any results"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => panic!("{}", search_error),
                 SearchError::NotFound => assert!(true),
@@ -93,7 +93,7 @@ mod sephora_spain {
         }
         match sephora_spain.look_for_products(String::from("iluminador facial")) {
             Ok(_) => panic!("We should not find any results"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => assert!(true),
                 SearchError::NotFound => panic!("{}", search_error),

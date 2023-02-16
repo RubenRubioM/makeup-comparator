@@ -66,7 +66,7 @@ mod maquillalia {
         let conf: Configuration = Configuration::new(0.95, usize::MAX);
         match Maquillalia::new(&conf).look_for_products(String::from("taemin")) {
             Ok(_) => panic!("We should not retrieve any results in this search"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => panic!("{}", search_error),
                 SearchError::NotFound => assert!(true),
@@ -74,7 +74,7 @@ mod maquillalia {
         };
         match Maquillalia::new(&conf).look_for_products(String::from("iluminador facial")) {
             Ok(_) => panic!("We should not retrieve any results in this search"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => assert!(true),
                 SearchError::NotFound => panic!("{}", search_error),

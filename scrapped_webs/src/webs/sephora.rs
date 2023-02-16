@@ -33,6 +33,8 @@ use scraper::Html;
 */
 /// Module for sephora.es
 pub mod spain {
+    use anyhow;
+
     use super::*;
     // Webpage url.
     const URL: &str = "https://www.sephora.es/";
@@ -60,15 +62,15 @@ pub mod spain {
 
     /// Scrappable trait implementation for SephoraSpain.
     impl<'a> Scrappable for SephoraSpain<'a> {
-        fn look_for_products(&self, name: String) -> Result<Vec<Product>, SearchError> {
+        fn look_for_products(&self, name: String) -> Result<Vec<Product>, anyhow::Error> {
             // We receive a word like "This word" and we should search in format of "This+word".
             let formatted_name = name.replace(' ', "+");
             let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}");
 
             // If the name match exactly, SephoraSpain redirects you to the product page.
-            let response = reqwest::blocking::get(query).unwrap();
+            let response = reqwest::blocking::get(query)?;
             let response_url = response.url().to_owned();
-            let document = scraper::Html::parse_document(&response.text().unwrap());
+            let document = scraper::Html::parse_document(&response.text()?);
             let mut products = Vec::<Product>::new();
 
             // If it only find 1 result it redirects to a product page directly with /p/product_link.html
@@ -86,16 +88,24 @@ pub mod spain {
                 let products_urls = self.search_results_urls(&document, name.as_str())?;
 
                 // Use threads to perform concurrency when sending petitions.
-                let mut handles = Vec::<JoinHandle<Product>>::new();
+                let mut handles = Vec::<JoinHandle<Option<Product>>>::new();
                 for url in products_urls {
-                    // Make a copy to be able to send via threads.
                     let name_copy = name.clone();
                     handles.push(
                         thread::Builder::new()
                             .name(url.clone())
-                            .spawn(move || {
-                                let response =
-                                    reqwest::blocking::get(&url).unwrap().text().unwrap();
+                            .spawn(move || -> Option<Product> {
+                                let response: String;
+                                // TODO: Maybe add some logging in case of returning None
+                                if let Ok(http_response) = reqwest::blocking::get(&url) {
+                                    if let Ok(text) = http_response.text() {
+                                        response = text;
+                                    } else {
+                                        return None;
+                                    }
+                                } else {
+                                    return None;
+                                }
                                 let document = scraper::Html::parse_document(&response);
                                 let mut product: Product = SephoraSpain::create_product(&document);
                                 product.set_link(url);
@@ -104,13 +114,15 @@ pub mod spain {
                                     full_name.as_str(),
                                     name_copy.as_str(),
                                 ));
-                                product
+                                Some(product)
                             })
                             .unwrap(),
                     );
                 }
                 for handle in handles {
-                    products.push(handle.join().unwrap());
+                    if let Some(product) = handle.join().unwrap() {
+                        products.push(product);
+                    }
                 }
             }
 
@@ -121,7 +133,7 @@ pub mod spain {
             &self,
             document: &Html,
             name: &str,
-        ) -> Result<Vec<String>, SearchError> {
+        ) -> Result<Vec<String>, anyhow::Error> {
             let mut urls: Vec<String> = Vec::new();
             let mut any_results = false;
 
@@ -156,9 +168,9 @@ pub mod spain {
             if any_results && !urls.is_empty() {
                 Ok(urls)
             } else if any_results && urls.is_empty() {
-                Err(SearchError::NotEnoughSimilarity)
+                Err(anyhow::anyhow!(SearchError::NotEnoughSimilarity))
             } else {
-                Err(SearchError::NotFound)
+                Err(anyhow::anyhow!(SearchError::NotFound))
             }
         }
 
