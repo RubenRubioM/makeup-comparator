@@ -26,26 +26,50 @@ mod sephora_spain {
 
         let product = products.get(0).unwrap();
         assert_eq!(
-            *product.name(),
-            "Protector labial spf50+ - Protector labial"
+            *product.name,
+            "Protector labial spf50+ - Protector labial".to_string()
         );
-        assert_eq!(*product.brand(), "ISDIN");
+        assert_eq!(*product.brand.as_deref().unwrap(), "ISDIN".to_string());
         assert_eq!(
-            *product.link(),
+            *product.link,
             "https://www.sephora.es/p/protector-labial-spf50---protector-labial-469417.html"
+                .to_string()
         );
-        assert_eq!(product.price_standard(), 0.0);
-        assert_eq!(product.price_sales(), None);
+        assert_eq!(product.price_standard, None);
+        assert_eq!(product.price_sales, None);
         // assert_eq!(product.rating(), None); // Not assert by rating since it is changing everyday.
-        assert_eq!(product.similarity(), 1.0);
-        assert_eq!(product.tones().unwrap().len(), 1);
-        assert_eq!(*product.tones().unwrap().first().unwrap().name(), "4 g");
+        assert_eq!(product.similarity, 1.0);
+        assert_eq!(product.tones.as_ref().unwrap().len(), 1);
         assert_eq!(
-            product.tones().unwrap().first().unwrap().price_standard(),
-            7.99
+            product
+                .tones
+                .as_deref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .name
+                .as_deref()
+                .unwrap(),
+            "4 g".to_string()
         );
         assert_eq!(
-            product.tones().unwrap().first().unwrap().price_sales(),
+            product
+                .tones
+                .as_deref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .price_standard,
+            Some(7.99)
+        );
+        assert_eq!(
+            product
+                .tones
+                .as_deref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .price_sales,
             None
         );
     }

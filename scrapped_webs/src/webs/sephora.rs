@@ -76,12 +76,10 @@ pub mod spain {
             // If it only find 1 result it redirects to a product page directly with /p/product_link.html
             if response_url.as_str().contains("/p/") {
                 let mut product = SephoraSpain::create_product(&document);
-                product.set_link(response_url.to_string());
-                let full_name = format!("{} {}", product.brand(), product.name());
-                product.set_similarity(utilities::compare_similarity(
-                    full_name.as_str(),
-                    name.as_str(),
-                ));
+                product.link = response_url.to_string();
+                let full_name = format!("{} {}", product.brand.as_ref().unwrap(), product.name);
+                product.similarity =
+                    utilities::compare_similarity(full_name.as_str(), name.as_str());
                 products.push(product);
             } else {
                 // Get the urls for all the coincidence we found in the search with the given `name`
@@ -108,12 +106,13 @@ pub mod spain {
                                 }
                                 let document = scraper::Html::parse_document(&response);
                                 let mut product: Product = SephoraSpain::create_product(&document);
-                                product.set_link(url);
-                                let full_name = format!("{} {}", product.brand(), product.name());
-                                product.set_similarity(utilities::compare_similarity(
+                                product.link = url;
+                                let full_name =
+                                    format!("{} {}", product.brand.as_ref().unwrap(), product.name);
+                                product.similarity = utilities::compare_similarity(
                                     full_name.as_str(),
                                     name_copy.as_str(),
-                                ));
+                                );
                                 Some(product)
                             })
                             .unwrap(),
@@ -179,10 +178,10 @@ pub mod spain {
             let html = document.root_element();
 
             let name = scrapping::attribute_html_value(&html, "h1>meta", "content").unwrap();
-            product.set_name(name);
+            product.name = name;
 
             let brand = scrapping::inner_html_value(&html, "span.brand-name>a").unwrap();
-            product.set_brand(brand);
+            product.brand = Some(brand); // TODO: Update this some with proper error handling
 
             let mut tones: Vec<Tone> = vec![];
             if let Some(variations_list) = html
@@ -206,7 +205,7 @@ pub mod spain {
                     tones.push(Self::create_tone(tone_element));
                 }
             }
-            product.set_tones(if tones.is_empty() { None } else { Some(tones) });
+            product.tones = if tones.is_empty() { None } else { Some(tones) };
 
             // FIXME: It is getting the number of reviews instead of the rating.
             if scrapping::has_html_selector(&html, "div.bv_numReviews_text>span>meta") {
@@ -217,12 +216,12 @@ pub mod spain {
                 } else {
                     rating
                 };
-                product.set_rating(Some(utilities::normalized_rating(
+                product.rating = Some(utilities::normalized_rating(
                     rating.parse::<f32>().unwrap(),
                     MAX_RATING,
-                )));
+                ));
             } else {
-                product.set_rating(None);
+                product.rating = None;
             }
 
             product
@@ -252,9 +251,10 @@ pub mod spain {
                 scrapping::inner_html_value(element, "span.price-sales").unwrap(),
             );
 
+            // TODO: Update this some with proper error handling
             Tone::new(
-                tone_name,
-                price_standard,
+                Some(tone_name),
+                Some(price_standard),
                 if price_standard > price_sale {
                     Some(price_sale)
                 } else {

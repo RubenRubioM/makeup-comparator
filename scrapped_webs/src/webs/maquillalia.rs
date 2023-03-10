@@ -121,12 +121,11 @@ impl<'a> Scrappable for Maquillalia<'a> {
                         }
                         let document = scraper::Html::parse_document(&response);
                         let mut product: Product = Self::create_product(&document);
-                        product.set_link(url);
-                        let full_name = format!("{} {}", product.brand(), product.name());
-                        product.set_similarity(utilities::compare_similarity(
-                            full_name.as_str(),
-                            name_copy.as_str(),
-                        ));
+                        product.link = url;
+                        let full_name =
+                            format!("{} {}", product.brand.as_ref().unwrap(), product.name);
+                        product.similarity =
+                            utilities::compare_similarity(full_name.as_str(), name_copy.as_str());
                         Some(product)
                     })
                     .unwrap(),
@@ -192,7 +191,6 @@ impl<'a> Scrappable for Maquillalia<'a> {
 
     fn create_product(document: &scraper::Html) -> Product {
         let mut product = Product::default();
-        product.set_available(true);
         let html = document.root_element();
 
         let full_name = Maquillalia::get_name_without_tone(
@@ -200,8 +198,9 @@ impl<'a> Scrappable for Maquillalia<'a> {
         );
         // TODO: Remove trailing and beginning white spaces.
         let mut name_and_brand = full_name.trim().split('-');
-        product.set_brand(name_and_brand.next().unwrap().to_string());
-        product.set_name(name_and_brand.next().unwrap().to_string());
+        // TODO: Update this some with proper error handling
+        product.brand = Some(name_and_brand.next().unwrap().to_string());
+        product.name = name_and_brand.next().unwrap().to_string();
 
         // If we find the element for different tones we iterate over all the websites and fill the Tone variable.
         let tones_urls_selector = scraper::Selector::parse("ul.familasColores>li").unwrap();
@@ -213,33 +212,36 @@ impl<'a> Scrappable for Maquillalia<'a> {
             let response = reqwest::blocking::get(&url_string).unwrap().text().unwrap();
             let document = scraper::Html::parse_document(&response);
             let mut tone = Self::create_tone(&document.root_element());
-            tone.set_url(Some(url_string));
+            tone.url = Some(url_string);
             product.add_tone(tone);
         }
 
-        if product.tones().is_none() {
+        if product.tones.is_none() {
             if scrapping::has_html_selector(&html, "table>tbody>tr>td>div.Price>del") {
                 // It is on sale.
-                product.set_price_standard(utilities::parse_price_string(
+                // TODO: Update this some with proper error handling
+                product.price_standard = Some(utilities::parse_price_string(
                     scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>del").unwrap(),
                 ));
-                product.set_price_sales(Some(utilities::parse_price_string(
+                // TODO: Update this some with proper error handling
+                product.price_sales = Some(utilities::parse_price_string(
                     scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong")
                         .unwrap(),
-                )));
+                ));
             } else {
-                product.set_price_standard(utilities::parse_price_string(
+                // TODO: Update this some with proper error handling
+                product.price_standard = Some(utilities::parse_price_string(
                     scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong")
                         .unwrap(),
                 ));
             }
-            product.set_rating(Some(utilities::normalized_rating(
+            product.rating = Some(utilities::normalized_rating(
                 scrapping::attribute_html_value(&html, "div.Rating>span.Stars", "data-rating")
                     .unwrap()
                     .parse()
                     .unwrap(),
                 MAX_RATING,
-            )));
+            ));
         }
         product
     }
@@ -253,16 +255,16 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let mut price_sales = Option::<f32>::None;
         if scrapping::has_html_selector(element, "table>tbody>tr>td>div.Price>del") {
             // It is on sale.
-            price_standard = utilities::parse_price_string(
+            price_standard = Some(utilities::parse_price_string(
                 scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>del").unwrap(),
-            );
+            ));
             price_sales = Some(utilities::parse_price_string(
                 scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
             ));
         } else {
-            price_standard = utilities::parse_price_string(
+            price_standard = Some(utilities::parse_price_string(
                 scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
-            );
+            ));
         }
         let rating = utilities::normalized_rating(
             scrapping::attribute_html_value(element, "div.Rating>span.Stars", "data-rating")
@@ -272,7 +274,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
             MAX_RATING,
         );
         Tone::new(
-            tone_name,
+            Some(tone_name),
             price_standard,
             price_sales,
             true,

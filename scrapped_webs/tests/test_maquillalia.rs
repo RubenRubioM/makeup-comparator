@@ -91,14 +91,14 @@ mod maquillalia {
             .unwrap();
         assert_eq!(products.len(), 1);
         assert_eq!(
-            products.first().unwrap().name(),
+            products.first().unwrap().name,
             " Labial Líquido Amore Mettallics"
         );
-        assert_eq!(products.first().unwrap().brand(), "Milani ");
-        assert_eq!(products.first().unwrap().price_standard(), 0.0);
-        assert_eq!(products.first().unwrap().price_sales(), None);
-        assert_eq!(products.first().unwrap().rating(), None);
-        assert_eq!(products.first().unwrap().tones().unwrap().len(), 2);
+        assert_eq!(products.first().unwrap().brand.as_ref().unwrap(), "Milani ");
+        assert_eq!(products.first().unwrap().price_standard, None);
+        assert_eq!(products.first().unwrap().price_sales, None);
+        assert_eq!(products.first().unwrap().rating, None);
+        assert_eq!(products.first().unwrap().tones.as_ref().unwrap().len(), 2);
     }
 
     #[test]
@@ -108,11 +108,11 @@ mod maquillalia {
             .look_for_products(String::from("Agrado - Bruma facial solar SPF50+"))
             .unwrap();
         assert_eq!(products.len(), 1);
+        assert_eq!(products.first().unwrap().name, " Bruma facial solar SPF50+");
         assert_eq!(
-            products.first().unwrap().name(),
-            " Bruma facial solar SPF50+"
+            products.first().unwrap().brand.as_deref().unwrap(),
+            "Agrado ".to_string()
         );
-        assert_eq!(products.first().unwrap().brand(), "Agrado ");
-        assert_eq!(products.first().unwrap().tones().is_none(), true);
+        assert_eq!(products.first().unwrap().tones.is_none(), true);
     }
 }
