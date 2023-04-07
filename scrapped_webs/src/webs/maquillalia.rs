@@ -76,10 +76,16 @@ impl<'a> Scrappable for Maquillalia<'a> {
         while !is_last_page {
             let query = format!("{URL}{SEARCH_SUFFIX}{formatted_name}&{PAGINATION_SUFFIX}{page}");
 
-            let response = reqwest::blocking::get(query).unwrap();
-            let document = scraper::Html::parse_document(&response.text().unwrap());
-            let total_results =
-                scrapping::inner_html_value(&document.root_element(), "div.NumPro>strong").unwrap();
+            let response = reqwest::blocking::get(query)?;
+            let document = scraper::Html::parse_document(&response.text()?);
+            let total_results: usize =
+                match scrapping::inner_html_value(&document.root_element(), "div.NumPro>strong") {
+                    Ok(total_results) => total_results.parse().unwrap(),
+                    Err(err) => {
+                        eprintln!("Brand not found, assigning String::new(): {:?}", err);
+                        0
+                    }
+                };
             // Get the urls for all the coincidence we found in the search with the given `name`
             let page_products_urls = self.search_results_urls(&document, name.as_str())?;
             for product_url in page_products_urls {
@@ -88,9 +94,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
 
             page += 1;
             let actual_items = page * ITEMS_PER_PAGE;
-            if self.config.max_results() <= products_urls.len()
-                || actual_items >= total_results.parse().unwrap()
-            {
+            if self.config.max_results() <= products_urls.len() || actual_items >= total_results {
                 is_last_page = true;
             }
 
