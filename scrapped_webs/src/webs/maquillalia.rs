@@ -12,6 +12,7 @@
             This way if we find 4 items that are 1 but with four different tones, we will only store the first one and redirect to it.
     3.3 - We get the full name with "h3.Title>a" and the URL with the "href" attribute.
 */
+#![allow(clippy::field_reassign_with_default)]
 
 use std::thread::JoinHandle;
 
@@ -82,7 +83,7 @@ impl<'a> Scrappable for Maquillalia<'a> {
                 match scrapping::inner_html_value(&document.root_element(), "div.NumPro>strong") {
                     Ok(total_results) => total_results.parse().unwrap(),
                     Err(err) => {
-                        eprintln!("Brand not found, assigning String::new(): {:?}", err);
+                        eprintln!("Total results not found, assigning 0: {:?}", err);
                         0
                     }
                 };
@@ -167,9 +168,20 @@ impl<'a> Scrappable for Maquillalia<'a> {
         for item in items {
             // In the search page we have all the tones for a product so we will only store one of them and skip the rest because they are separated in the las dash({Brand} - {Name} - {Tone}).
             // Name format is {Brand} - {Name} - {Tone}
-            let element_name = scrapping::inner_html_value(&item, "h3.Title>a").unwrap();
-            let full_name = Maquillalia::get_name_without_tone(&element_name);
-            let url = scrapping::attribute_html_value(&item, "h3.Title>a", "href").unwrap();
+            let full_name = scrapping::inner_html_value(&item, "h3.Title>a").map_or_else(
+                |err| {
+                    eprintln!("Full name not found, assigning String::new(): {:?}", err);
+                    String::new()
+                },
+                |element_name| Maquillalia::get_name_without_tone(&element_name),
+            );
+            let url = match scrapping::attribute_html_value(&item, "h3.Title>a", "href") {
+                Ok(url) => Some(url),
+                Err(err) => {
+                    eprintln!("URL not found, assigning None: {:?}", err);
+                    None
+                }
+            };
             any_results = true;
 
             let similarity = utilities::compare_similarity(name, &full_name);
@@ -180,7 +192,9 @@ impl<'a> Scrappable for Maquillalia<'a> {
                 }
 
                 individual_products.push(full_name);
-                urls.push(url.to_string());
+                if let Some(url) = url {
+                    urls.push(url);
+                }
             }
         }
 
@@ -197,14 +211,32 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let mut product = Product::default();
         let html = document.root_element();
 
-        let full_name = Maquillalia::get_name_without_tone(
-            &scrapping::inner_html_value(&html, "h1.Title").unwrap(),
+        // Get full name and remove tone
+        let full_name = scrapping::inner_html_value(&html, "h1.Title").map_or_else(
+            |err| {
+                eprintln!("Text not found, assigning String::new(): {:?}", err);
+                String::new()
+            },
+            |text| Maquillalia::get_name_without_tone(&text),
         );
+
         // TODO: Remove trailing and beginning white spaces.
         let mut name_and_brand = full_name.trim().split('-');
-        // TODO: Update this some with proper error handling
-        product.brand = Some(name_and_brand.next().unwrap().to_string());
-        product.name = name_and_brand.next().unwrap().to_string();
+
+        // Assign brand and name values to product, with error handling
+        match (name_and_brand.next(), name_and_brand.next()) {
+            (Some(brand), Some(name)) => {
+                product.brand = Some(brand.to_string());
+                product.name = name.to_string();
+            }
+            _ => {
+                eprintln!(
+                    "Error: could not extract brand and name from product name: {}",
+                    full_name
+                );
+                // Return an error value here, or handle the error in some other way.
+            }
+        }
 
         // If we find the element for different tones we iterate over all the websites and fill the Tone variable.
         let tones_urls_selector = scraper::Selector::parse("ul.familasColores>li").unwrap();
@@ -212,78 +244,112 @@ impl<'a> Scrappable for Maquillalia<'a> {
         let tones_urls = document.select(&tones_urls_selector);
         for url in tones_urls {
             // TODO: Try to parallelize in the future.
-            let url_string = scrapping::attribute_html_value(&url, "a", "href").unwrap();
-            let response = reqwest::blocking::get(&url_string).unwrap().text().unwrap();
-            let document = scraper::Html::parse_document(&response);
-            let mut tone = Self::create_tone(&document.root_element());
-            tone.url = Some(url_string);
-            product.add_tone(tone);
+            if let Ok(url_string) = scrapping::attribute_html_value(&url, "a", "href") {
+                let response = reqwest::blocking::get(&url_string).unwrap().text().unwrap();
+                let document = scraper::Html::parse_document(&response);
+                let mut tone = Self::create_tone(&document.root_element());
+                tone.url = Some(url_string);
+                product.add_tone(tone);
+            }
         }
 
         if product.tones.is_none() {
-            if scrapping::has_html_selector(&html, "table>tbody>tr>td>div.Price>del") {
-                // It is on sale.
-                // TODO: Update this some with proper error handling
-                product.price_standard = Some(utilities::parse_price_string(
-                    scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>del").unwrap(),
-                ));
-                // TODO: Update this some with proper error handling
-                product.price_sales = Some(utilities::parse_price_string(
+            if let Ok(price_standard) =
+                scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>del")
+                    .map(utilities::parse_price_string)
+            {
+                product.price_standard = Some(price_standard);
+                product.price_sales =
                     scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong")
-                        .unwrap(),
-                ));
+                        .map(utilities::parse_price_string)
+                        .map_err(|err| {
+                            eprintln!("Product.price_sales not found, assigning None: {:?}", err);
+                            err
+                        })
+                        .ok()
             } else {
-                // TODO: Update this some with proper error handling
-                product.price_standard = Some(utilities::parse_price_string(
+                product.price_standard =
                     scrapping::inner_html_value(&html, "table>tbody>tr>td>div.Price>strong")
-                        .unwrap(),
-                ));
+                        .map(utilities::parse_price_string)
+                        .map_err(|err| {
+                            eprintln!(
+                                "Product.price_standard not found, assigning None: {:?}",
+                                err
+                            );
+                            err
+                        })
+                        .ok()
             }
-            product.rating = Some(utilities::normalized_rating(
+
+            product.rating =
                 scrapping::attribute_html_value(&html, "div.Rating>span.Stars", "data-rating")
-                    .unwrap()
-                    .parse()
-                    .unwrap(),
-                MAX_RATING,
-            ));
+                    .map_or_else(
+                        |err| {
+                            eprintln!(
+                                "Product.price_standard not found, assigning None: {:?}",
+                                err
+                            );
+                            None
+                        },
+                        |rating| {
+                            Some(utilities::normalized_rating(
+                                rating.parse().unwrap(),
+                                MAX_RATING,
+                            ))
+                        },
+                    );
         }
         product
     }
 
     fn create_tone(element: &scraper::ElementRef) -> Tone {
-        let tone_name =
-            Maquillalia::get_tone_name(&scrapping::inner_html_value(element, "h1.Title").unwrap())
-                .trim()
-                .to_string();
-        let price_standard;
-        let mut price_sales = Option::<f32>::None;
-        if scrapping::has_html_selector(element, "table>tbody>tr>td>div.Price>del") {
-            // It is on sale.
-            price_standard = Some(utilities::parse_price_string(
-                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>del").unwrap(),
-            ));
-            price_sales = Some(utilities::parse_price_string(
-                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
-            ));
-        } else {
-            price_standard = Some(utilities::parse_price_string(
-                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong").unwrap(),
-            ));
-        }
-        let rating = utilities::normalized_rating(
-            scrapping::attribute_html_value(element, "div.Rating>span.Stars", "data-rating")
-                .unwrap()
-                .parse()
-                .unwrap(),
-            MAX_RATING,
+        let mut tone = Tone::default();
+
+        tone.name = scrapping::inner_html_value(element, "h1.Title").map_or_else(
+            |err| {
+                eprintln!("Tone.name not found, assigning None: {:?}", err);
+                None
+            },
+            |name| Some(Maquillalia::get_tone_name(&name).trim().to_string()),
         );
-        Tone::new(
-            Some(tone_name),
-            price_standard,
-            price_sales,
-            true,
-            None,
-            Some(rating),
-        )
+
+        if let Ok(price_standard) =
+            scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>del")
+                .map(utilities::parse_price_string)
+        {
+            tone.price_standard = Some(price_standard);
+            tone.price_sales =
+                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong")
+                    .map(utilities::parse_price_string)
+                    .map_err(|err| {
+                        eprintln!("Tone.price_sales not found, assigning None: {:?}", err);
+                        err
+                    })
+                    .ok()
+        } else {
+            tone.price_standard =
+                scrapping::inner_html_value(element, "table>tbody>tr>td>div.Price>strong")
+                    .map(utilities::parse_price_string)
+                    .map_err(|err| {
+                        eprintln!("Tone.price_standard not found, assigning None: {:?}", err);
+                        err
+                    })
+                    .ok()
+        }
+        tone.rating =
+            scrapping::attribute_html_value(element, "div.Rating>span.Stars", "data-rating")
+                .map_or_else(
+                    |err| {
+                        eprintln!("Tone.price_standard not found, assigning None: {:?}", err);
+                        None
+                    },
+                    |rating| {
+                        Some(utilities::normalized_rating(
+                            rating.parse().unwrap(),
+                            MAX_RATING,
+                        ))
+                    },
+                );
+        tone
     }
 }

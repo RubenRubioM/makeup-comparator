@@ -227,13 +227,18 @@ pub mod spain {
 
             // FIXME: It is getting the number of reviews instead of the rating.
             product.rating = scrapping::inner_html_value(&html, "div.bv_numReviews_text>span>meta")
-                .ok()
-                .map(|rating| {
-                    utilities::normalized_rating(rating.parse::<f32>().unwrap(), MAX_RATING)
-                });
-            if product.rating.is_none() {
-                eprintln!("Product.rating not found, assigning None");
-            }
+                .map_or_else(
+                    |err| {
+                        eprintln!("Product.rating not found, assigning None: {:?}", err);
+                        None
+                    },
+                    |rating| {
+                        Some(utilities::normalized_rating(
+                            rating.parse::<f32>().unwrap(),
+                            MAX_RATING,
+                        ))
+                    },
+                );
 
             product
         }
@@ -257,6 +262,7 @@ pub mod spain {
                         .ok()
                         .map(utilities::parse_price_string)
                 });
+
             if price_standard.is_none() {
                 eprintln!("Tone.price_standard not found, assigning None");
             }
