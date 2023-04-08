@@ -39,8 +39,7 @@ mod sephora_spain {
         assert_eq!(product.price_sales, None);
         // assert_eq!(product.rating(), None); // Not assert by rating since it is changing everyday.
         // assert_eq!(product.similarity(), 1.0);
-        assert_eq!(product.tones().unwrap().len(), 1);
-        assert_eq!(*product.tones().unwrap().first().unwrap().name(), "4 g");
+        assert_eq!(product.tones.as_ref().unwrap().len(), 1);
         assert_eq!(
             product
                 .tones
