@@ -29,7 +29,7 @@ jobs:
           echo "::set-output name=version::$YEAR.$MONTH.$ID"
       - name: Create Git tag
         if: github.event.pull_request.merged == true
-        uses: actions/create-release@v1.0.5
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
