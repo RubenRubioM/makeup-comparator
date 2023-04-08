@@ -20,7 +20,7 @@ pub fn print(results_by_website: &ResultsByWebsite) {
     for product in results_by_website.values().flatten() {
         println!();
         println!("{}", product.terminal_format());
-        if let Some(tones) = product.tones() {
+        if let Some(tones) = product.tones.as_ref() {
             for tone in tones {
                 println!("{}", tone.terminal_format());
             }
@@ -39,14 +39,27 @@ mod tests {
     /// Tests the print function.
     #[test]
     fn print_function_happy_path() {
-        let tone: Tone = Tone::new(String::from("Tone 1"), 50.99, None, true, None, None);
-        let tone_on_sale: Tone =
-            Tone::new(String::from("Tone 1"), 50.99, Some(20.0), true, None, None);
+        let tone: Tone = Tone::new(
+            Some(String::from("Tone 1")),
+            Some(50.99),
+            None,
+            true,
+            None,
+            None,
+        );
+        let tone_on_sale: Tone = Tone::new(
+            Some(String::from("Tone 1")),
+            Some(50.99),
+            Some(20.0),
+            true,
+            None,
+            None,
+        );
         let product: Product = Product::new(
             String::from("Product 1"),
-            String::from("Brand"),
+            Some(String::from("Brand")),
             String::from("http://www.test.com"),
-            10.0,
+            Some(10.0),
             Some(5.0),
             Some(vec![tone, tone_on_sale]),
             Some(0.95421),

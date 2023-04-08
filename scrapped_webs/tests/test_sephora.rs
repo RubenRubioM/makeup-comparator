@@ -26,26 +26,51 @@ mod sephora_spain {
 
         let product = products.get(0).unwrap();
         assert_eq!(
-            *product.name(),
-            "Protector labial spf50+ - Protector labial"
+            *product.name,
+            "Protector labial spf50+ - Protector labial".to_string()
         );
         // assert_eq!(*product.brand(), "ISDIN");
         assert_eq!(
-            *product.link(),
+            *product.link,
             "https://www.sephora.es/p/protector-labial-spf50---protector-labial-469417.html"
+                .to_string()
         );
-        assert_eq!(product.price_standard(), 0.0);
-        assert_eq!(product.price_sales(), None);
+        assert_eq!(product.price_standard, None);
+        assert_eq!(product.price_sales, None);
         // assert_eq!(product.rating(), None); // Not assert by rating since it is changing everyday.
         // assert_eq!(product.similarity(), 1.0);
         assert_eq!(product.tones().unwrap().len(), 1);
         assert_eq!(*product.tones().unwrap().first().unwrap().name(), "4 g");
         assert_eq!(
-            product.tones().unwrap().first().unwrap().price_standard(),
-            7.99
+            product
+                .tones
+                .as_deref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .name
+                .as_deref()
+                .unwrap(),
+            "4 g".to_string()
         );
         assert_eq!(
-            product.tones().unwrap().first().unwrap().price_sales(),
+            product
+                .tones
+                .as_deref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .price_standard,
+            Some(7.99)
+        );
+        assert_eq!(
+            product
+                .tones
+                .as_deref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .price_sales,
             None
         );
     }
@@ -85,7 +110,7 @@ mod sephora_spain {
 
         match sephora_spain.look_for_products(String::from("Taemin")) {
             Ok(_) => panic!("We should not find any results"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => panic!("{}", search_error),
                 SearchError::NotFound => assert!(true),
@@ -93,7 +118,7 @@ mod sephora_spain {
         }
         match sephora_spain.look_for_products(String::from("iluminador facial")) {
             Ok(_) => panic!("We should not find any results"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => assert!(true),
                 SearchError::NotFound => panic!("{}", search_error),

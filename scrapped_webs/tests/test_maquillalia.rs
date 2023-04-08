@@ -66,7 +66,7 @@ mod maquillalia {
         let conf: Configuration = Configuration::new(0.95, usize::MAX);
         match Maquillalia::new(&conf).look_for_products(String::from("taemin")) {
             Ok(_) => panic!("We should not retrieve any results in this search"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => panic!("{}", search_error),
                 SearchError::NotFound => assert!(true),
@@ -74,7 +74,7 @@ mod maquillalia {
         };
         match Maquillalia::new(&conf).look_for_products(String::from("iluminador facial")) {
             Ok(_) => panic!("We should not retrieve any results in this search"),
-            Err(search_error) => match search_error {
+            Err(search_error) => match search_error.downcast_ref::<SearchError>().unwrap() {
                 SearchError::Timeout => panic!("{}", search_error),
                 SearchError::NotEnoughSimilarity => assert!(true),
                 SearchError::NotFound => panic!("{}", search_error),
@@ -91,14 +91,14 @@ mod maquillalia {
             .unwrap();
         assert_eq!(products.len(), 1);
         assert_eq!(
-            products.first().unwrap().name(),
+            products.first().unwrap().name,
             " Labial Líquido Amore Mettallics"
         );
-        assert_eq!(products.first().unwrap().brand(), "Milani ");
-        assert_eq!(products.first().unwrap().price_standard(), 0.0);
-        assert_eq!(products.first().unwrap().price_sales(), None);
-        assert_eq!(products.first().unwrap().rating(), None);
-        assert_eq!(products.first().unwrap().tones().unwrap().len(), 2);
+        assert_eq!(products.first().unwrap().brand.as_ref().unwrap(), "Milani ");
+        assert_eq!(products.first().unwrap().price_standard, None);
+        assert_eq!(products.first().unwrap().price_sales, None);
+        assert_eq!(products.first().unwrap().rating, None);
+        assert_eq!(products.first().unwrap().tones.as_ref().unwrap().len(), 2);
     }
 
     #[test]
@@ -108,11 +108,11 @@ mod maquillalia {
             .look_for_products(String::from("Agrado - Bruma facial solar SPF50+"))
             .unwrap();
         assert_eq!(products.len(), 1);
+        assert_eq!(products.first().unwrap().name, " Bruma facial solar SPF50+");
         assert_eq!(
-            products.first().unwrap().name(),
-            " Bruma facial solar SPF50+"
+            products.first().unwrap().brand.as_deref().unwrap(),
+            "Agrado ".to_string()
         );
-        assert_eq!(products.first().unwrap().brand(), "Agrado ");
-        assert_eq!(products.first().unwrap().tones().is_none(), true);
+        assert_eq!(products.first().unwrap().tones.is_none(), true);
     }
 }
