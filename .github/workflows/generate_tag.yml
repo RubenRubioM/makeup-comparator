@@ -18,6 +18,7 @@ jobs:
       - name: Determine version
         id: determine_version
         run: |
+          git fetch --unshallow --tags
           YEAR=$(date +"%Y")
           MONTH=$(date +"%m")
           LAST_TAG=$(git describe --tags)
