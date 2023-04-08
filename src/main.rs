@@ -24,5 +24,5 @@ fn main() {
     let parameters_processor = ParametersProcessor::new(Args::parse());
     let scraper_handler = ScraperHandler::new(parameters_processor);
     let results_by_website = scraper_handler.get_results();
-    terminal_visualizer::print(&results_by_website); //Test
+    terminal_visualizer::print(&results_by_website);
 }
