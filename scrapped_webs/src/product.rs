@@ -9,23 +9,23 @@ use crate::helper::utilities;
 #[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct Tone {
     /// Name of the tone.
-    name: String,
+    pub name: Option<String>,
     /// The standard price.
-    price_standard: f32,
+    pub price_standard: Option<f32>,
     /// The price in case it is on sale.
-    price_sales: Option<f32>,
+    pub price_sales: Option<f32>,
     /// Available flag.
-    available: bool,
+    pub available: bool,
     /// Possible url if it is not directly in the same webpage.
-    url: Option<String>,
+    pub url: Option<String>,
     /// Possible rating.
-    rating: Option<f32>,
+    pub rating: Option<f32>,
 }
 
 impl Tone {
     pub fn new(
-        name: String,
-        price_standard: f32,
+        name: Option<String>,
+        price_standard: Option<f32>,
         price_sales: Option<f32>,
         available: bool,
         url: Option<String>,
@@ -51,26 +51,26 @@ impl Tone {
             true => out.push_str("✔️   "),
             false => out.push_str("❌   "),
         }
-        out.push_str(format!("{} - ", self.name).as_str());
+        out.push_str(format!("{} - ", self.name.as_ref().unwrap()).as_str());
         match self.price_sales {
             Some(price_sales) => {
                 let strikedthrought_price = ansi_term::Style::new()
                     .strikethrough()
-                    .paint(self.price_standard.to_string())
+                    .paint(self.price_standard.unwrap().to_string())
                     .to_string();
                 out.push_str(
                     format!(
                         "{}€ {}€({}%)",
                         strikedthrought_price,
                         price_sales,
-                        utilities::discount(self.price_standard, self.price_sales)
+                        utilities::discount(self.price_standard.unwrap(), self.price_sales)
                             .unwrap()
                             .1
                     )
                     .as_str(),
                 )
             }
-            None => out.push_str(format!("{}€", self.price_standard).as_str()),
+            None => out.push_str(format!("{}€", self.price_standard.unwrap()).as_str()),
         }
         if let Some(rating) = self.rating {
             out.push_str(format!(" - {rating}⭐").as_str())
@@ -83,65 +83,16 @@ impl Tone {
         if self.price_sales.is_some() {
             self.price_sales.unwrap()
         } else {
-            self.price_standard
+            self.price_standard.unwrap()
         }
-    }
-
-    /// Returns the name of the product.
-    pub fn name(&self) -> &String {
-        &self.name
-    }
-    /// Returns the standard price.
-    pub fn price_standard(&self) -> f32 {
-        self.price_standard
-    }
-    /// Returns the price if it is on sale.
-    pub fn price_sales(&self) -> Option<f32> {
-        self.price_sales
-    }
-    /// Returns the available.
-    pub fn available(&self) -> bool {
-        self.available
-    }
-    /// Returns the url.
-    pub fn url(&self) -> Option<String> {
-        self.url.clone()
-    }
-    /// Returns the rating.
-    pub fn rating(&self) -> Option<f32> {
-        self.rating
-    }
-    /// Sets the name of the product.
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-    /// Sets the standard price.
-    pub fn set_price_standard(&mut self, price_standard: f32) {
-        self.price_standard = price_standard;
-    }
-    /// Sets the price if it is on sale.
-    pub fn set_price_sales(&mut self, price_sales: Option<f32>) {
-        self.price_sales = price_sales;
-    }
-    /// Sets if the product its available.
-    pub fn set_available(&mut self, available: bool) {
-        self.available = available;
-    }
-    /// Sets the URL.
-    pub fn set_url(&mut self, url: Option<String>) {
-        self.url = url;
-    }
-    /// Sets the rating.
-    pub fn set_rating(&mut self, rating: Option<f32>) {
-        self.rating = rating;
     }
 }
 
 impl Display for Tone {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut out: String = String::new();
-        out.push_str(format!("Name: {}", self.name()).as_str());
-        out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
+        out.push_str(format!("Name: {}", self.name.as_ref().unwrap()).as_str());
+        out.push_str(format!("\nPrice: {}", self.price_standard.unwrap()).as_str());
         if let Some(price_sales) = self.price_sales {
             out.push_str(format!("\nPrice on sale: {price_sales}").as_str());
         }
@@ -154,23 +105,23 @@ impl Display for Tone {
 #[derive(Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct Product {
     /// The product name.
-    name: String,
+    pub name: String,
     /// The brand name.
-    brand: String,
+    pub brand: Option<String>,
     /// The link to the product.
-    link: String,
+    pub link: String,
     /// The standard price.
-    price_standard: f32,
+    pub price_standard: Option<f32>,
     /// The price in case it is on sale.
-    price_sales: Option<f32>,
+    pub price_sales: Option<f32>,
     /// The ratings between 0-5.
-    rating: Option<f32>,
+    pub rating: Option<f32>,
     /// Similarity between the product name to search and the one found.
-    similarity: f32,
+    pub similarity: f32,
     /// Available of the product.
-    available: bool,
+    pub available: bool,
     /// The list of tones for this product.
-    tones: Option<Vec<Tone>>,
+    pub tones: Option<Vec<Tone>>,
 }
 
 impl Product {
@@ -188,9 +139,9 @@ impl Product {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: String,
-        brand: String,
+        brand: Option<String>,
         link: String,
-        price_standard: f32,
+        price_standard: Option<f32>,
         price_sales: Option<f32>,
         tones: Option<Vec<Tone>>,
         rating: Option<f32>,
@@ -217,7 +168,7 @@ impl Product {
     pub fn terminal_format(&self) -> String {
         let mut out: String = String::new();
         out.push_str(format!("- {}. ", self.similarity_formatted()).as_str());
-        out.push_str(format!("{} - {} - ", self.name, self.brand).as_str());
+        out.push_str(format!("{} - {} - ", self.name, self.brand.as_ref().unwrap()).as_str());
 
         match self.tones.as_ref() {
             // If we have tones, look for the lowest and highest price
@@ -239,21 +190,21 @@ impl Product {
                 Some(price_sales) => {
                     let strikedthrought_price = ansi_term::Style::new()
                         .strikethrough()
-                        .paint(self.price_standard.to_string())
+                        .paint(self.price_standard.unwrap().to_string())
                         .to_string();
                     out.push_str(
                         format!(
                             "{}€ {}€({}%)",
                             strikedthrought_price,
                             price_sales,
-                            utilities::discount(self.price_standard, self.price_sales)
+                            utilities::discount(self.price_standard.unwrap(), self.price_sales)
                                 .unwrap()
                                 .1
                         )
                         .as_str(),
                     )
                 }
-                None => out.push_str(format!("{}€", self.price_standard).as_str()),
+                None => out.push_str(format!("{}€", self.price_standard.unwrap()).as_str()),
             },
         }
 
@@ -271,78 +222,6 @@ impl Product {
         format!("{:.2}%", self.similarity * 100.0)
     }
 
-    /// Returns the name of the product.
-    pub fn name(&self) -> &String {
-        &self.name
-    }
-    /// Returns the brand of the product.
-    pub fn brand(&self) -> &String {
-        &self.brand
-    }
-    /// Returns the link to the product.
-    pub fn link(&self) -> &String {
-        &self.link
-    }
-    /// Returns the standard price.
-    pub fn price_standard(&self) -> f32 {
-        self.price_standard
-    }
-    /// Returns the price if it is on sale.
-    pub fn price_sales(&self) -> Option<f32> {
-        self.price_sales
-    }
-    /// Returns the tones of the product.
-    pub fn tones(&self) -> Option<&Vec<Tone>> {
-        self.tones.as_ref()
-    }
-    /// Returns the rating.
-    pub fn rating(&self) -> Option<f32> {
-        self.rating
-    }
-    /// Returns the similarity.
-    pub fn similarity(&self) -> f32 {
-        self.similarity
-    }
-    /// Returns the availability.
-    pub fn available(&self) -> bool {
-        self.available
-    }
-    /// Sets the name of the product.
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-    /// Sets the brand of the product.
-    pub fn set_brand(&mut self, brand: String) {
-        self.brand = brand;
-    }
-    /// Sets the link to the product.
-    pub fn set_link(&mut self, link: String) {
-        self.link = link;
-    }
-    /// Sets the standard price.
-    pub fn set_price_standard(&mut self, price_standard: f32) {
-        self.price_standard = price_standard;
-    }
-    /// Sets the price if it is on sale.
-    pub fn set_price_sales(&mut self, price_sales: Option<f32>) {
-        self.price_sales = price_sales
-    }
-    /// Sets the tones of the product.
-    pub fn set_tones(&mut self, tones: Option<Vec<Tone>>) {
-        self.tones = tones;
-    }
-    /// Sets the rating.
-    pub fn set_rating(&mut self, rating: Option<f32>) {
-        self.rating = rating;
-    }
-    /// Sets the similarity.
-    pub fn set_similarity(&mut self, similarity: f32) {
-        self.similarity = similarity;
-    }
-    /// Sets the availability.
-    pub fn set_available(&mut self, set_available: bool) {
-        self.available = set_available;
-    }
     /// Adds a new Tone.
     pub fn add_tone(&mut self, tone: Tone) {
         if self.tones.is_none() {
@@ -355,19 +234,19 @@ impl Product {
 impl Display for Product {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut out: String = String::new();
-        out.push_str(format!("Name: {}", self.name()).as_str());
-        out.push_str(format!("\nBrand: {}", self.brand()).as_str());
-        out.push_str(format!("\nLink: {}", self.link()).as_str());
-        out.push_str(format!("\nPrice: {}", self.price_standard()).as_str());
-        if let Some(price_sales) = self.price_sales() {
+        out.push_str(format!("Name: {}", self.name).as_str());
+        out.push_str(format!("\nBrand: {}", self.brand.as_ref().unwrap()).as_str());
+        out.push_str(format!("\nLink: {}", self.link).as_str());
+        out.push_str(format!("\nPrice: {}", self.price_standard.unwrap()).as_str());
+        if let Some(price_sales) = self.price_sales {
             out.push_str(format!("\nPrice on sale: {price_sales}").as_str());
         }
-        if let Some(rating) = self.rating() {
+        if let Some(rating) = self.rating {
             out.push_str(format!("\nRating: {rating}").as_str());
         }
-        out.push_str(format!("\nSimilarity: {}", self.similarity()).as_str());
-        out.push_str(format!("\nAvailable: {}", self.available()).as_str());
-        if let Some(tones) = self.tones() {
+        out.push_str(format!("\nSimilarity: {}", self.similarity).as_str());
+        out.push_str(format!("\nAvailable: {}", self.available).as_str());
+        if let Some(tones) = self.tones.as_ref() {
             out.push_str(format!("\nTones: {tones:#?}").as_str());
         }
 
@@ -382,8 +261,8 @@ mod tests {
     /// Tests the Tone::new function.
     #[test]
     fn tone_instantiation_getters_and_setters() {
-        let name: String = String::from("Tone1");
-        let price_standard: f32 = 50.0;
+        let name: Option<String> = Some(String::from("Tone1"));
+        let price_standard: Option<f32> = Some(50.0);
         let price_sales: Option<f32> = Some(25.0);
         let available: bool = true;
         let url: Option<String> = Some(String::from("www.tone.es"));
@@ -398,12 +277,12 @@ mod tests {
         );
 
         // Getters
-        assert_eq!(*tone.name(), name);
-        assert_eq!(tone.price_standard(), price_standard);
-        assert_eq!(tone.price_sales().unwrap(), price_sales.unwrap());
-        assert_eq!(tone.available(), available);
-        assert_eq!(tone.url(), url);
-        assert_eq!(tone.rating(), rating);
+        assert_eq!(*tone.name.unwrap(), name.unwrap());
+        assert_eq!(tone.price_standard.unwrap(), price_standard.unwrap());
+        assert_eq!(tone.price_sales.unwrap(), price_sales.unwrap());
+        assert_eq!(tone.available, available);
+        assert_eq!(tone.url.unwrap(), url.unwrap());
+        assert_eq!(tone.rating.unwrap(), rating.unwrap());
 
         // Setters
         let set_name = String::from("Tone2");
@@ -413,12 +292,12 @@ mod tests {
         let set_url: Option<String> = Some(String::from("www.tone2.es"));
         let set_rating: Option<f32> = Some(4.0);
 
-        tone.set_name(set_name.clone());
-        tone.set_price_standard(set_price_standard);
-        tone.set_price_sales(set_price_sales.clone());
-        tone.set_available(set_available);
-        tone.set_url(set_url.clone());
-        tone.set_rating(set_rating.clone());
+        tone.name = Some(set_name.clone());
+        tone.price_standard = Some(set_price_standard);
+        tone.price_sales = set_price_sales.clone();
+        tone.available = set_available;
+        tone.url = set_url.clone();
+        tone.rating = set_rating.clone();
 
         println!("Testing Debug trait implementation for Tone: {:?}", tone);
         println!("Testing Display trait implementation for Tone: {}", tone);
@@ -428,10 +307,10 @@ mod tests {
     #[test]
     fn product_instantiation_getters_and_setters() {
         let name: String = String::from("Test");
-        let brand: String = String::from("Test Brand");
+        let brand: Option<String> = Some(String::from("Test Brand"));
         let link: String = String::from("http://test.es");
-        let tone_name: String = String::from("Tone 1");
-        let price_standard: f32 = 50.0;
+        let tone_name: Option<String> = Some(String::from("Tone 1"));
+        let price_standard: Option<f32> = Some(50.0);
         let price_sales: Option<f32> = Some(25.0);
         let available: bool = true;
         let url: Option<String> = Some(String::from("www.tone.es"));
@@ -459,40 +338,76 @@ mod tests {
         );
 
         // Getters
-        assert_eq!(*product.name(), name);
-        assert_eq!(*product.brand(), brand);
-        assert_eq!(*product.link(), link);
-        assert_eq!(product.price_standard(), price_standard);
-        assert_eq!(product.price_sales().unwrap(), price_sales.unwrap());
-        assert_eq!(product.rating().unwrap(), rating.unwrap());
-        assert_eq!(product.similarity(), similarity);
-        assert_eq!(product.available(), available);
+        assert_eq!(*product.name, name);
+        assert_eq!(*product.brand.unwrap(), brand.unwrap());
+        assert_eq!(*product.link, link);
+        assert_eq!(product.price_standard.unwrap(), price_standard.unwrap());
+        assert_eq!(product.price_sales.unwrap(), price_sales.unwrap());
+        assert_eq!(product.rating.unwrap(), rating.unwrap());
+        assert_eq!(product.similarity, similarity);
+        assert_eq!(product.available, available);
 
-        assert_eq!(*product.tones().unwrap().first().unwrap().name(), tone_name);
         assert_eq!(
-            product.tones().unwrap().first().unwrap().price_standard(),
-            price_standard
+            *product
+                .tones
+                .as_ref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .name
+                .as_ref()
+                .unwrap(),
+            tone_name.unwrap()
         );
         assert_eq!(
-            product.tones().unwrap().first().unwrap().price_sales(),
-            price_sales
+            product
+                .tones
+                .as_ref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .price_standard
+                .unwrap(),
+            price_standard.unwrap()
         );
         assert_eq!(
-            product.tones().unwrap().first().unwrap().available(),
+            product
+                .tones
+                .as_ref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .price_sales
+                .unwrap(),
+            price_sales.unwrap()
+        );
+        assert_eq!(
+            product.tones.as_ref().unwrap().first().unwrap().available,
             available
         );
-        assert_eq!(product.tones().unwrap().first().unwrap().url(), url);
         assert_eq!(
-            product.tones().unwrap().first().unwrap().rating(),
-            tone_rating
+            product
+                .tones
+                .as_ref()
+                .unwrap()
+                .first()
+                .unwrap()
+                .url
+                .as_deref()
+                .unwrap(),
+            url.unwrap()
+        );
+        assert_eq!(
+            product.tones.unwrap().first().unwrap().rating.unwrap(),
+            tone_rating.unwrap()
         );
 
         // Setters
         let set_name: String = String::from("Test 2");
-        let set_brand: String = String::from("Test Brand 2");
+        let set_brand: Option<String> = Some(String::from("Test Brand 2"));
         let set_link: String = String::from("http://test2.es");
-        let set_tone_name: String = String::from("Tone 2");
-        let set_price_standard: f32 = 100.0;
+        let set_tone_name: Option<String> = Some(String::from("Tone 2"));
+        let set_price_standard: Option<f32> = Some(100.0);
         let set_price_sales: Option<f32> = Some(50.0);
         let set_available: bool = false;
         let set_url: Option<String> = Some(String::from("www.tone2.es"));
@@ -508,15 +423,15 @@ mod tests {
         let set_rating: Option<f32> = Some(4.0);
         let set_similarity: f32 = 0.75;
 
-        product.set_name(set_name.clone());
-        product.set_brand(set_brand.clone());
-        product.set_link(set_link.clone());
-        product.set_price_standard(set_price_standard);
-        product.set_price_sales(set_price_sales.clone());
-        product.set_tones(set_tones.clone());
-        product.set_rating(set_rating.clone());
-        product.set_similarity(set_similarity);
-        product.set_available(set_available);
+        product.name = set_name.clone();
+        product.brand = set_brand.clone();
+        product.link = set_link.clone();
+        product.price_standard = set_price_standard;
+        product.price_sales = set_price_sales.clone();
+        product.tones = set_tones.clone();
+        product.rating = set_rating.clone();
+        product.similarity = set_similarity;
+        product.available = set_available;
 
         println!(
             "Testing Debug trait implementation for Product: {:?}",
@@ -532,28 +447,28 @@ mod tests {
     #[test]
     fn price_all_paths() {
         // Tone with price on sale.
-        let price_standard: f32 = 10.0;
-        let price_sales: f32 = 5.0;
+        let price_standard: Option<f32> = Some(10.0);
+        let price_sales: Option<f32> = Some(5.0);
         let tone_on_sale: Tone = Tone {
-            name: String::from("Tone 1"),
+            name: Some(String::from("Tone 1")),
             price_standard,
-            price_sales: Some(price_sales),
+            price_sales: price_sales,
             available: true,
             url: None,
             rating: Some(9.5),
         };
-        assert_eq!(tone_on_sale.price(), price_sales);
+        assert_eq!(tone_on_sale.price(), price_sales.unwrap());
 
         // Tone without price on sale.
         let tone: Tone = Tone {
-            name: String::from("Tone 1"),
+            name: Some(String::from("Tone 1")),
             price_standard,
             price_sales: None,
             available: true,
             url: None,
             rating: Some(9.5),
         };
-        assert_eq!(tone.price(), price_standard);
+        assert_eq!(tone.price(), price_standard.unwrap());
     }
 
     /// Tests the function Product::terminal_format without tones and on sale.
@@ -561,9 +476,9 @@ mod tests {
     fn product_format_terminal_without_tones() {
         let product: Product = Product {
             name: String::from("Product 1"),
-            brand: String::from("Brand"),
+            brand: Some(String::from("Brand")),
             link: String::from("http://www.test.com"),
-            price_standard: 10.0,
+            price_standard: Some(10.0),
             price_sales: None,
             rating: Some(9.5),
             similarity: 0.9,
@@ -574,9 +489,9 @@ mod tests {
 
         let product_on_sale: Product = Product {
             name: String::from("Product 1"),
-            brand: String::from("Brand"),
+            brand: Some(String::from("Brand")),
             link: String::from("http://www.test.com"),
-            price_standard: 10.0,
+            price_standard: Some(10.0),
             price_sales: Some(5.0),
             rating: Some(9.5),
             similarity: 0.9,
@@ -591,16 +506,16 @@ mod tests {
     #[test]
     fn product_format_terminal_with_tones() {
         let tone: Tone = Tone {
-            name: String::from("Tone 1"),
-            price_standard: 50.99,
+            name: Some(String::from("Tone 1")),
+            price_standard: Some(50.99),
             price_sales: None,
             available: true,
             url: None,
             rating: None,
         };
         let tone_on_sale: Tone = Tone {
-            name: String::from("Tone 1"),
-            price_standard: 10.0,
+            name: Some(String::from("Tone 1")),
+            price_standard: Some(10.0),
             price_sales: Some(5.0),
             available: true,
             url: None,
@@ -609,9 +524,9 @@ mod tests {
 
         let product: Product = Product {
             name: String::from("Product 1"),
-            brand: String::from("Brand"),
+            brand: Some(String::from("Brand")),
             link: String::from("http://www.test.com"),
-            price_standard: 10.0,
+            price_standard: Some(10.0),
             price_sales: Some(5.0),
             rating: Some(9.5),
             similarity: 0.95421,
@@ -628,8 +543,8 @@ mod tests {
     #[test]
     fn tone_format_terminal_available_on_sale_with_rating() {
         let tone: Tone = Tone {
-            name: String::from("Tone 1"),
-            price_standard: 10.0,
+            name: Some(String::from("Tone 1")),
+            price_standard: Some(10.0),
             price_sales: Some(5.0),
             available: true,
             url: None,
@@ -643,8 +558,8 @@ mod tests {
     #[test]
     fn tone_format_terminal_unavailable_without_rating() {
         let tone: Tone = Tone {
-            name: String::from("Tone 1"),
-            price_standard: 10.0,
+            name: Some(String::from("Tone 1")),
+            price_standard: Some(10.0),
             price_sales: None,
             available: false,
             url: None,
@@ -657,8 +572,8 @@ mod tests {
     #[test]
     fn tone_format_terminal_unavailable_with_rating() {
         let tone: Tone = Tone {
-            name: String::from("Tone 1"),
-            price_standard: 10.0,
+            name: Some(String::from("Tone 1")),
+            price_standard: Some(10.0),
             price_sales: None,
             available: false,
             url: None,
@@ -671,8 +586,8 @@ mod tests {
     #[test]
     fn tone_format_terminal_unavailable_on_sale_without_rating() {
         let tone: Tone = Tone {
-            name: String::from("Tone 1"),
-            price_standard: 10.0,
+            name: Some(String::from("Tone 1")),
+            price_standard: Some(10.0),
             price_sales: Some(5.0),
             available: false,
             url: None,

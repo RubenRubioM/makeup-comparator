@@ -154,6 +154,7 @@ pub mod scrapping {
     /// String - if found
     /// HtmlSearchError::ElementNotFound - if not found the selector
     /// HtmlSearchError::AttributeNotFound - if not found the attribute
+    #[allow(dead_code)]
     pub fn has_html_selector(element: &ElementRef, selector: &str) -> bool {
         element
             .select(&scraper::Selector::parse(selector).unwrap())
