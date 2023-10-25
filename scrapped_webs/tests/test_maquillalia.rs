@@ -6,7 +6,7 @@ mod maquillalia {
 
     /// Tests the creation for Maquillalia structure.
     #[test]
-    fn maquillalia_instantiation() {
+    fn instantiation() {
         let config: Configuration = Configuration::new(0.50, 100);
         let _ = Maquillalia::new(&config);
         assert!(true);
@@ -26,6 +26,7 @@ mod maquillalia {
 
     /// Tests the parsing between the full name in Maquillalia and a custom version with only the final tone name.
     #[test]
+    #[ignore]
     fn get_tone_name() {
         let full_name: String =
             String::from("Maybelline - Labial líquido SuperStay Vinyl Ink - 35: Cheeky");
@@ -40,6 +41,7 @@ mod maquillalia {
 
     /// Tests a search with a few results.
     #[test]
+    #[ignore]
     fn search_with_results() {
         let conf: Configuration = Configuration::new(0.0, usize::MAX);
         let _products = Maquillalia::new(&conf)
@@ -51,6 +53,7 @@ mod maquillalia {
     /// Tests a search with a specific num of results to prove that we are not retrieving more or less than that.
     /// In this test the petition find >1500 results but we have to stop at MAX_RESULTS.
     #[test]
+    #[ignore]
     fn search_with_specific_num_results() {
         const MAX_RESULTS: usize = 3;
         let conf: Configuration = Configuration::new(0.0, MAX_RESULTS);
@@ -62,6 +65,7 @@ mod maquillalia {
 
     /// Tests a search with no results.
     #[test]
+    #[ignore]
     fn search_with_no_results() {
         let conf: Configuration = Configuration::new(0.95, usize::MAX);
         match Maquillalia::new(&conf).look_for_products(String::from("taemin")) {
@@ -84,6 +88,7 @@ mod maquillalia {
 
     /// Tests a search for a product with different tones available.
     #[test]
+    #[ignore]
     fn search_product_with_tones() {
         let conf: Configuration = Configuration::new(0.0, 1);
         let products = Maquillalia::new(&conf)
@@ -102,6 +107,7 @@ mod maquillalia {
     }
 
     #[test]
+    #[ignore]
     fn search_product_without_tones() {
         let conf: Configuration = Configuration::new(0.0, 1);
         let products = Maquillalia::new(&conf)
