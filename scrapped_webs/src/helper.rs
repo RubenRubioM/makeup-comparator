@@ -44,7 +44,6 @@ pub mod utilities {
     where
         <T as std::str::FromStr>::Err: std::fmt::Debug,
     {
-        println!("{price}");
         let currency_characters: Vec<char> = vec!['€', '$'];
         price
             .replace(',', ".")
