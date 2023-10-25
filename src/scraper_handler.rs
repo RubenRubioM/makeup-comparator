@@ -46,16 +46,28 @@ impl ScraperHandler {
                 parameters::Website::SephoraSpain => {
                     let sephora_spain =
                         SephoraSpain::new(self.parameters_processor.configuration());
-                    let products = sephora_spain
+                    let products = match sephora_spain
                         .look_for_products(self.parameters_processor.product().clone())
-                        .unwrap();
+                    {
+                        Ok(products) => products,
+                        Err(err) => {
+                            eprintln!("{:?}", err);
+                            Vec::new()
+                        }
+                    };
                     results_by_website.insert(parameters::Website::SephoraSpain, products);
                 }
                 parameters::Website::Maquillalia => {
                     let maquillalia = Maquillalia::new(self.parameters_processor.configuration());
-                    let products = maquillalia
+                    let products = match maquillalia
                         .look_for_products(self.parameters_processor.product().clone())
-                        .unwrap();
+                    {
+                        Ok(products) => products,
+                        Err(err) => {
+                            eprintln!("{:?}", err);
+                            Vec::new()
+                        }
+                    };
                     results_by_website.insert(parameters::Website::Maquillalia, products);
                 }
                 parameters::Website::All => todo!(),
