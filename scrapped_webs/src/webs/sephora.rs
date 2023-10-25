@@ -253,17 +253,14 @@ pub mod spain {
                     },
                     |tone_name| Some(tone_name.trim().to_string()),
                 );
-            let available = match scrapping::has_html_selector(element, "span.dot-green") {
-                true => true,
-                false => false,
-            };
+            let available = scrapping::has_html_selector(element, "span.dot-green");
 
             let mut price_standard = scrapping::inner_html_value(element, "span.price-sales")
                 .ok()
                 .map(|text| {
                     // At this moment when we retrieve this element value we have 4 \n and the value is second.
-                    let mut price = text.split("\n").nth(1).unwrap().to_string();
-                    if price == "\n" || price == "N/A" || price == "" {
+                    let mut price = text.split('\n').nth(1).unwrap().to_string();
+                    if price == "\n" || price == "N/A" || price.is_empty() {
                         price = String::from("0 €");
                     }
                     utilities::parse_price_string(price)
