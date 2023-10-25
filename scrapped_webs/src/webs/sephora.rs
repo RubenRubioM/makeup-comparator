@@ -33,9 +33,9 @@ use scraper::Html;
 */
 /// Module for sephora.es
 pub mod spain {
+    use super::*;
     use anyhow;
 
-    use super::*;
     // Webpage url.
     const URL: &str = "https://www.sephora.es/";
     // Suffix for searching in the website.
@@ -197,7 +197,7 @@ pub mod spain {
                     String::new()
                 });
 
-            product.brand = scrapping::inner_html_value(&html, "span.brand-name>a")
+            product.brand = scrapping::inner_html_value(&html, "span.brand-name")
                 .map(|brand| brand.trim().to_string())
                 .ok(); // unwrap_or_else is not needed because the None case is already handled by ok() method
 
@@ -226,26 +226,26 @@ pub mod spain {
             product.tones = if tones.is_empty() { None } else { Some(tones) };
 
             // FIXME: It is getting the number of reviews instead of the rating.
-            product.rating = scrapping::inner_html_value(&html, "div.bv_numReviews_text>span>meta")
-                .map_or_else(
-                    |err| {
-                        eprintln!("Product.rating not found, assigning None: {:?}", err);
-                        None
-                    },
-                    |rating| {
-                        Some(utilities::normalized_rating(
-                            rating.parse::<f32>().unwrap(),
-                            MAX_RATING,
-                        ))
-                    },
-                );
+            product.rating =
+                scrapping::inner_html_value(&html, "span.bv-secondary-rating-summary-rating")
+                    .map_or_else(
+                        |err| {
+                            eprintln!("Product.rating not found, assigning None: {:?}", err);
+                            None
+                        },
+                        |rating| {
+                            Some(utilities::normalized_rating(
+                                rating.parse::<f32>().unwrap(),
+                                MAX_RATING,
+                            ))
+                        },
+                    );
 
             product
         }
 
         fn create_tone(element: &ElementRef) -> Tone {
-            // TODO: Find if the product is available. Right know we basically don't add it to the list.
-            let tone_name = scrapping::inner_html_value(element, "span.variation-title")
+            let tone_name = scrapping::inner_html_value(element, "div.variation-title")
                 .map_or_else(
                     |err| {
                         eprintln!("Tone.name not found, assigning None: {:?}", err);
@@ -253,24 +253,32 @@ pub mod spain {
                     },
                     |tone_name| Some(tone_name.trim().to_string()),
                 );
+            let available = match scrapping::has_html_selector(element, "span.dot-green") {
+                true => true,
+                false => false,
+            };
 
-            let price_standard = scrapping::inner_html_value(element, "span.price-standard")
+            let mut price_standard = scrapping::inner_html_value(element, "span.price-sales")
                 .ok()
-                .map(utilities::parse_price_string)
-                .or_else(|| {
-                    scrapping::inner_html_value(element, "span.price-sales-standard")
-                        .ok()
-                        .map(utilities::parse_price_string)
+                .map(|text| {
+                    // At this moment when we retrieve this element value we have 4 \n and the value is second.
+                    let mut price = text.split("\n").nth(1).unwrap().to_string();
+                    if price == "\n" || price == "N/A" || price == "" {
+                        price = String::from("0 €");
+                    }
+                    utilities::parse_price_string(price)
                 });
 
             if price_standard.is_none() {
                 eprintln!("Tone.price_standard not found, assigning None");
+                price_standard = None;
             }
 
             // price_standard could also be inside span.price-sales this is why later we check if it is greater than price_sale
+            //TODO: Not on sales promotions on sephora right now to test this.
             let mut price_sale = None;
             if let Some(price_standard) = price_standard {
-                price_sale = match scrapping::inner_html_value(element, "span.price-sales") {
+                price_sale = match scrapping::inner_html_value(element, "TODO-get-price_sale") {
                     Ok(price_sale) => {
                         let price_sale_number = utilities::parse_price_string(price_sale);
                         if price_standard > price_sale_number {
@@ -286,7 +294,7 @@ pub mod spain {
                 }
             };
 
-            Tone::new(tone_name, price_standard, price_sale, true, None, None)
+            Tone::new(tone_name, price_standard, price_sale, available, None, None)
         }
     }
 }

@@ -20,26 +20,28 @@ mod sephora_spain {
         let conf: Configuration = Configuration::new(0.0, usize::MAX);
         let sephora_spain = SephoraSpain::new(&conf);
         let products = sephora_spain
-            .look_for_products(String::from("ISDIN protector labial"))
+            .look_for_products(String::from(
+                "SoftSculpt® Shaping Stick - Contorno en barra ",
+            ))
             .unwrap();
         assert_eq!(products.len(), 1);
 
         let product = products.get(0).unwrap();
         assert_eq!(
             *product.name,
-            "Protector labial spf50+ - Protector labial".to_string()
+            "SoftSculpt® Shaping Stick - Contorno en barra".to_string()
         );
         // assert_eq!(*product.brand(), "ISDIN");
         assert_eq!(
             *product.link,
-            "https://www.sephora.es/p/protector-labial-spf50---protector-labial-469417.html"
+            "https://www.sephora.es/p/softsculpt-shaping-stick---contorno-en-barra-P10044136.html"
                 .to_string()
         );
         assert_eq!(product.price_standard, None);
         assert_eq!(product.price_sales, None);
         // assert_eq!(product.rating(), None); // Not assert by rating since it is changing everyday.
         // assert_eq!(product.similarity(), 1.0);
-        assert_eq!(product.tones.as_ref().unwrap().len(), 1);
+        assert_eq!(product.tones.as_ref().unwrap().len(), 6);
         assert_eq!(
             product
                 .tones
@@ -50,7 +52,7 @@ mod sephora_spain {
                 .name
                 .as_deref()
                 .unwrap(),
-            "4 g".to_string()
+            "Light + 10.5g".to_string()
         );
         assert_eq!(
             product
@@ -60,7 +62,7 @@ mod sephora_spain {
                 .first()
                 .unwrap()
                 .price_standard,
-            Some(7.99)
+            Some(33.99)
         );
         assert_eq!(
             product
