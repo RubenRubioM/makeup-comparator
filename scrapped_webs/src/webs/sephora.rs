@@ -255,41 +255,41 @@ pub mod spain {
                 );
             let available = scrapping::has_html_selector(element, "span.dot-green");
 
-            let mut price_standard = scrapping::inner_html_value(element, "span.price-sales")
-                .ok()
-                .map(|text| {
-                    // At this moment when we retrieve this element value we have 4 \n and the value is second.
-                    let mut price = text.split('\n').nth(1).unwrap().to_string();
-                    if price == "\n" || price == "N/A" || price.is_empty() {
-                        price = String::from("0 €");
-                    }
-                    utilities::parse_price_string(price)
-                });
-
-            if price_standard.is_none() {
-                eprintln!("Tone.price_standard not found, assigning None");
-                price_standard = None;
-            }
+            let price_standard = scrapping::inner_html_value(element, "span.price-sales")
+                .map_or_else(
+                    |err| {
+                        eprintln!("Tone.price_standard not found, assigning None: {:?}", err);
+                        None
+                    },
+                    |text| {
+                        // At this moment when we retrieve this element value we have 4 \n and the value is second.
+                        let mut price = text.split('\n').nth(1).unwrap().to_string();
+                        if price == "\n" || price == "N/A" || price.is_empty() {
+                            price = String::from("0 €");
+                        }
+                        Some(utilities::parse_price_string(price))
+                    },
+                );
 
             // price_standard could also be inside span.price-sales this is why later we check if it is greater than price_sale
             //TODO: Not on sales promotions on sephora right now to test this.
-            let mut price_sale = None;
-            if let Some(price_standard) = price_standard {
-                price_sale = match scrapping::inner_html_value(element, "TODO-get-price_sale") {
-                    Ok(price_sale) => {
-                        let price_sale_number = utilities::parse_price_string(price_sale);
-                        if price_standard > price_sale_number {
-                            Some(price_sale_number)
-                        } else {
-                            None
-                        }
-                    }
-                    Err(err) => {
-                        eprintln!("Tone.price_sale not found, assigning None: {:?}", err);
-                        None
-                    }
-                }
-            };
+            let price_sale = None;
+            // if let Some(price_standard) = price_standard {
+            //     price_sale = match scrapping::inner_html_value(element, "TODO-get-price_sale") {
+            //         Ok(price_sale) => {
+            //             let price_sale_number = utilities::parse_price_string(price_sale);
+            //             if price_standard > price_sale_number {
+            //                 Some(price_sale_number)
+            //             } else {
+            //                 None
+            //             }
+            //         }
+            //         Err(err) => {
+            //             eprintln!("Tone.price_sale not found, assigning None: {:?}", err);
+            //             None
+            //         }
+            //     }
+            // };
 
             Tone::new(tone_name, price_standard, price_sale, available, None, None)
         }
