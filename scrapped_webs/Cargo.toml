@@ -2,12 +2,18 @@
 name = "scrapped-webs"
 version = "1.0.0"
 edition = "2021"
-description = "Auxiliary crate to encapsulate the scrapped webs functionalities"
+description = "Web scrapping crate to webscrap different makeup websites and retrieve their products."
+authors = ["RubenRubioM"]
+readme = "README.md"
+homepage = "https://github.com/RubenRubioM/makeup-comparator/tree/main/scrapped_webs"
+repository = "https://github.com/RubenRubioM/makeup-comparator/tree/main/scrapped_webs"
+keywords = [""]
+categories = [""]
 
 [dependencies]
 ansi_term = "0.12.1"
 reqwest = {version = "0.11", features = ["blocking"]}
-scraper = "0.13.0"
+scraper = "0.18.1"
 strsim = "0.10.0"
 anyhow = "1.0"
 thiserror = "1.0"

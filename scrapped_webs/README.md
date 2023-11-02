@@ -1,0 +1,1 @@
+Auxiliary crate for webscrapping different makeup websites
