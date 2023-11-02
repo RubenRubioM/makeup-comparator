@@ -22,7 +22,7 @@ name = "makeup-comparator"
 [dependencies]
 ansi_term = "0.12.1"
 clap = { version = "3.2.23", features = ["derive"] }
-scrapped-webs = {path = "scrapped_webs", version = "*"}
+scrapped-webs = {path = "scrapped_webs", version = "1.0.0"}
 
 [profile.release]
 opt-level = 3
