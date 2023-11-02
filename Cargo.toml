@@ -1,7 +1,14 @@
 [package]
 name = "makeup-comparator"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+authors = ["RubenRubioM"]
+description = "CLI program look for cosmetic products within a various specialized websites and compare them"
+readme = "README.md"
+homepage = "https://github.com/RubenRubioM/makeup-comparator"
+repository = "https://github.com/RubenRubioM/makeup-comparator"
+keywords = ["cli", "search", "makeup"]
+categories = ["command-line-utilities"]
 
 [workspace]
 members = [
@@ -14,7 +21,7 @@ name = "makeup-comparator"
 [dependencies]
 ansi_term = "0.12.1"
 clap = { version = "3.2.23", features = ["derive"] }
-scrapped-webs = {path = "scrapped_webs"}
+scrapped-webs = {path = "scrapped_webs", version = "*"}
 
 [profile.release]
 opt-level = 3
