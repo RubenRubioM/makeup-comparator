@@ -9,6 +9,7 @@ homepage = "https://github.com/RubenRubioM/makeup-comparator"
 repository = "https://github.com/RubenRubioM/makeup-comparator"
 keywords = ["cli", "search", "makeup"]
 categories = ["command-line-utilities"]
+license-file = "LICENSE.txt"
 
 [workspace]
 members = [

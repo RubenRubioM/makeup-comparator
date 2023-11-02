@@ -7,8 +7,9 @@ authors = ["RubenRubioM"]
 readme = "README.md"
 homepage = "https://github.com/RubenRubioM/makeup-comparator/tree/main/scrapped_webs"
 repository = "https://github.com/RubenRubioM/makeup-comparator/tree/main/scrapped_webs"
-keywords = [""]
+keywords = ["sephora", "maquillalia", "webscrapping", "makeup"]
 categories = [""]
+license-file = "LICENSE.txt"
 
 [dependencies]
 ansi_term = "0.12.1"
