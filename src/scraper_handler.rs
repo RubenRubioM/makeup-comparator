@@ -44,50 +44,109 @@ impl ScraperHandler {
         for web in self.parameters_processor.websites().iter() {
             match web {
                 parameters::Website::SephoraSpain => {
-                    let sephora_spain =
-                        SephoraSpain::new(self.parameters_processor.configuration());
-                    let products = match sephora_spain
-                        .look_for_products(self.parameters_processor.product().clone())
-                    {
-                        Ok(products) => products,
-                        Err(err) => {
-                            eprintln!("{:?}", err);
-                            Vec::new()
-                        }
-                    };
-                    results_by_website.insert(parameters::Website::SephoraSpain, products);
+                    results_by_website.insert(
+                        parameters::Website::SephoraSpain,
+                        self.get_results_sephora_spain(),
+                    );
                 }
                 parameters::Website::Maquillalia => {
-                    let maquillalia = Maquillalia::new(self.parameters_processor.configuration());
-                    let products = match maquillalia
-                        .look_for_products(self.parameters_processor.product().clone())
-                    {
-                        Ok(products) => products,
-                        Err(err) => {
-                            eprintln!("{:?}", err);
-                            Vec::new()
-                        }
-                    };
-                    results_by_website.insert(parameters::Website::Maquillalia, products);
+                    results_by_website.insert(
+                        parameters::Website::Maquillalia,
+                        self.get_results_maquillalia(),
+                    );
                 }
-                parameters::Website::All => todo!(),
+                parameters::Website::All => {
+                    results_by_website.insert(
+                        parameters::Website::SephoraSpain,
+                        self.get_results_sephora_spain(),
+                    );
+                    results_by_website.insert(
+                        parameters::Website::Maquillalia,
+                        self.get_results_maquillalia(),
+                    );
+                }
             }
         }
-        self.sort(&results_by_website);
+        self.sort(&mut results_by_website);
         results_by_website
     }
 
     /// Sorts the products by the args.sort_by parameter
     /// # Arguments
     /// * `results_by_website` - The products for every shop.
-    fn sort(&self, _results_by_website: &ResultsByWebsite) {
+    fn sort(&self, results_by_website: &mut ResultsByWebsite) {
         match self.parameters_processor.sorting_type() {
-            parameters::SortingType::Name => (),
-            parameters::SortingType::Price => (),
-            parameters::SortingType::Similarity => (),
-            parameters::SortingType::Brand => (),
-            parameters::SortingType::Rating => (),
+            parameters::SortingType::Name => {
+                results_by_website
+                    .iter_mut()
+                    .for_each(|(_, results)| results.sort_by_key(|product| product.name.clone()));
+            }
+            parameters::SortingType::Price => {
+                //TODO: This is not working, we have to check the tones prices if we have no price in the product
+                results_by_website.iter_mut().for_each(|(_, results)| {
+                    results.sort_by(|p1, p2| {
+                        // If not found neither price_sales or price_standard, assign a f32::MAX to put it at the end of the vector.
+                        let price1 = if p1.price_sales.is_some() {
+                            p1.price_sales.unwrap()
+                        } else {
+                            p1.price_standard.unwrap_or(f32::MAX)
+                        };
+                        let price2 = if p2.price_sales.is_some() {
+                            p2.price_sales.unwrap()
+                        } else {
+                            p1.price_standard.unwrap_or(f32::MAX)
+                        };
+
+                        price2.partial_cmp(&price1).unwrap()
+                    })
+                });
+            }
+            parameters::SortingType::Similarity => {
+                results_by_website.iter_mut().for_each(|(_, results)| {
+                    results.sort_by(|p1, p2| p2.similarity.partial_cmp(&p1.similarity).unwrap())
+                })
+            }
+            parameters::SortingType::Brand => {
+                results_by_website
+                    .iter_mut()
+                    .for_each(|(_, results)| results.sort_by_key(|product| product.brand.clone()));
+            }
+            parameters::SortingType::Rating => {
+                results_by_website.iter_mut().for_each(|(_, results)| {
+                    results.sort_by(|p1, p2| {
+                        let rating1 = p1.rating.unwrap_or(0_f32);
+                        let rating2 = p2.rating.unwrap_or(0_f32);
+                        rating2.partial_cmp(&rating1).unwrap()
+                    })
+                });
+            }
         }
+    }
+
+    fn get_results_sephora_spain(&self) -> Vec<Product> {
+        let sephora_spain = SephoraSpain::new(self.parameters_processor.configuration());
+        let products =
+            match sephora_spain.look_for_products(self.parameters_processor.product().clone()) {
+                Ok(products) => products,
+                Err(err) => {
+                    eprintln!("{:?}", err);
+                    Vec::new()
+                }
+            };
+        products
+    }
+
+    fn get_results_maquillalia(&self) -> Vec<Product> {
+        let maquillalia = Maquillalia::new(self.parameters_processor.configuration());
+        let products =
+            match maquillalia.look_for_products(self.parameters_processor.product().clone()) {
+                Ok(products) => products,
+                Err(err) => {
+                    eprintln!("{:?}", err);
+                    Vec::new()
+                }
+            };
+        products
     }
 }
 
@@ -157,9 +216,7 @@ mod tests {
     }
 
     /// Tests a search for a product in all websites.
-    /// TODO: Implement the Website::All
     #[test]
-    #[should_panic]
     #[ignore]
     fn get_results_all_websites() {
         let args = Args {
